@@ -17,7 +17,7 @@ class Game(object):
             for event in pygame.event.get():
                 if event.type == pygame.QUIT or event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                     self.work = False
-                if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.type == pygame.MOUSEBUTTONDOWN: // jak chcecie to można to dać do jakiejs funkcji/metody
                     print("klawisz myszki", event.button, "wcisniety na poz", event.pos)
                     if event.pos[0]<100 and event.pos[1]<200:
                         print("niewidoczny przycisk, mozna cos wywolac");
