@@ -1,52 +1,51 @@
 import pygame
-from rocket import Rocket
-
-class Game(object):
-    def __init__(self):
-        self.ms_max = 50.0
-        pygame.init()
-        self.window = pygame.display.set_mode((1000, 700))
-        self.time = 0.0
-        self.clock = pygame.time.Clock()
-        self.work = True
-        self.kwadrat = pygame.Rect(10, 50, 134, 123)
-
-        self.player = Rocket(self)
-
-        while self.work:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT or event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                    self.work = False
-            # ograniczenie ilości klatek
-
-            self.time += self.clock.tick()
-            if self.time >= self.ms_max :
-                self.time = 0.0
-                self.tick()
-            self.draw()
+from Interface import Interface
 
 
-    def tick(self):
-        self.window.fill((0, 0, 0))
-        key_lib =  pygame.key.get_pressed()
-        if key_lib[pygame.K_UP]:
-            self.kwadrat.y -= 1
-        if key_lib[pygame.K_DOWN]:
-            self.kwadrat.y += 1
+def main() :
+    #część inicjalizacyjna :
+    print("Hello")
+    pygame.init()
+    time = 0.0
+    clock = pygame.time.Clock()
+    interface = Interface(talia_gracza,talia_gracza_po_spilt,talia_krupiera)
+    game_work = True
 
-        if key_lib[pygame.K_LEFT]:
-            self.kwadrat.x -= 1
-        if key_lib[pygame.K_RIGHT]:
-            self.kwadrat.x += 1
+    time2 = 0.0
+    #Pętla główna
+    while game_work:
+        #cykle
+        time += clock.tick()
+
+        if time > (1000 / 5): #20 cykli na sekunde
+            time2 += time
+            time = 0.0
+
+            interface.update()
+            print("")
+            print(interface.get_feedback())
 
 
-        self.player.tick()
-    def draw(self):
-        self.window.fill((0,0,0))
-        pygame.draw.rect(self.window,(100,100,100),self.kwadrat)
-        pygame.display.flip()
 
-print("dziala2")
-if __name__ == "__main__":
-    print("dziala")
-    klasa = Game()
+talia_gracza = [
+        (11,"As","Pik"),
+        (3,"3","Kier"),
+        (5,"5","Karo"),
+        (7,"7","Pik"),
+        (9,"9","Trefl"),
+        (10,"Dama","Pik"),
+        (11,"As","Pik"),
+        (10,"Król","Karo")
+        ]
+
+talia_gracza_po_spilt = [
+        #(1,"As","Pik"),
+        #(3,"3","Kier")
+        ]
+
+talia_krupiera = [
+        (11,"As","Pik"),
+        (105,"5","Trefl"),
+        ]
+if __name__=="__main__":
+    main()
