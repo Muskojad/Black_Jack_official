@@ -1,182 +1,118 @@
 import pygame
-#from rocket import Rocket
+
+from menu_GUI import Menu
+
 width_w = 1000
 height_w = 700
 
 green = (36, 143, 46)
 
-class Menu(object):
-    def __init__(self):
-        self.num_decs = 1
-        self.hotseat = False
-        self.paused = False
-
-        self.font = pygame.font.SysFont('Arial', 25)
-        self.font_arrow = pygame.font.SysFont('Arial', 20)
-        self.font_color = (0, 0, 0)
-        self.basic_col = (29, 59, 207)
-        self.up_col = (29, 186, 207)
-        self.down_col = (29, 207, 56)
-        self.width_rect = 200
-        self.height_rect = 50
-        self.center_x = int((width_w-self.width_rect)/2)
-        self.dist = 50
-
-        self.y_start = int((height_w - 4 * self.height_rect - 3 * self.dist)/2)# 4 - liczba poziomych przycisków do wysrodkowania
-        self.y_deck = self.y_start + self.dist + self.height_rect
-        self.y_hotseat = self.y_start + 2*(self.dist + self.height_rect)
-        self.y_stats = self.y_start + 3*(self.dist + self.height_rect)
-
-        self.up_down = int(self.height_rect/2) #wysokść up_down
-        self.up_down_x= self.center_x + self.width_rect - self.up_down * 2
-
-        self.button_start = pygame.Rect(self.center_x, self.y_start, self.width_rect, self.height_rect)
-        self.button_deck = pygame.Rect(self.center_x, self.y_deck, self.width_rect - self.up_down * 2, self.height_rect)
-
-        self.button_deck_up = pygame.Rect(self.up_down_x, self.y_deck, self.up_down*2, self.up_down)
-        self.button_deck_down = pygame.Rect(self.up_down_x, self.y_deck + self.up_down, self.up_down*2, self.up_down)
-
-        self.button_hotseat = pygame.Rect(self.center_x, self.y_hotseat, self.width_rect, self.height_rect)
-        self.button_stats = pygame.Rect(self.center_x, self.y_stats, self.width_rect, self.height_rect)
-
-        self.button_resume = pygame.Rect(self.center_x, self.y_start - 100, self.width_rect, self.height_rect)
-
-    def draw(self, window):
-        pygame.draw.rect(window, self.basic_col, self.button_start)
-        pygame.draw.rect(window, self.basic_col, self.button_deck)
-        pygame.draw.rect(window, self.up_col, self.button_deck_up)
-        pygame.draw.rect(window, self.down_col, self.button_deck_down)
-        pygame.draw.rect(window, self.basic_col, self.button_hotseat)
-        pygame.draw.rect(window, self.basic_col, self.button_stats)
-        if self.paused:
-            pygame.draw.rect(window, self.basic_col, self.button_resume)
-            text_resume = self.font.render('Resume', True, self.font_color)
-            window.blit(text_resume, self.center_text(text_resume, self.button_resume))
-
-        text_start = self.font.render('Start', True, self.font_color)
-        if self.num_decs == 1:
-            text_deck = self.font.render('1 Deck', True, self.font_color)
-        else:
-            text_deck = self.font.render(str(self.num_decs)+' Decks', True, self.font_color)
-        text_deck_up = self.font_arrow.render('↑', True, self.font_color)
-        text_deck_down = self.font_arrow.render('↓', True, self.font_color)
-        if not self.hotseat:
-            text_hotseat = self.font.render('Hot-seat: OFF', True, self.font_color)
-        else:
-            text_hotseat = self.font.render('Hot-seat: ON', True, self.font_color)
-        text_stats = self.font.render('Stats', True, self.font_color)
-
-        #print("⇧")
-        window.blit(text_start, self.center_text(text_start, self.button_start))
-        window.blit(text_deck, self.center_text(text_deck, self.button_deck))
-        window.blit(text_deck_up, self.center_text(text_deck_up, self.button_deck_up))
-        window.blit(text_deck_down, self.center_text(text_deck_down, self.button_deck_down))
-        window.blit(text_hotseat, self.center_text(text_hotseat, self.button_hotseat))
-        window.blit(text_stats, self.center_text(text_stats, self.button_stats))
-
-    def check_all_buttons(self, pos):
-        if self.click(self.button_start, pos[0], pos[1]):
-            game.start_game()
-            print("start game")
-        if self.click(self.button_deck_up, pos[0], pos[1]):
-            if self.num_decs < 8:
-                self.num_decs += 1
-            print("number of decks:", self.num_decs)
-        if self.click(self.button_deck_down, pos[0], pos[1]):
-            if self.num_decs > 1:
-                self.num_decs -= 1
-            print("number of decks:", self.num_decs)
-        if self.click(self.button_hotseat, pos[0], pos[1]):
-            self.hotseat = not(self.hotseat)
-        if self.click(self.button_stats, pos[0], pos[1]):
-            print("go to stats(w przygotowaniu)")
-        if self.paused and self.click(self.button_resume, pos[0], pos[1]):
-            game.resume()
-            print("resuming")
-
-
-    def click(self, button, x, y):
-        if button.x < x < button.x + button.w and button.y < y < button.y + button.h:
-            #print("d")
-            return True
-
-    def center_text(self, text, list):
-        x = list[0]
-        y = list[1]
-        w = list[2]
-        h = list[3]
-        return text.get_rect(center=(int(x + 0.5 * w), int(y + 0.5 * h)))
-
-    def add_resume_button(self):
-        self.paused = True
 
 
 
+def main() :
+    #część inicjalizacyjna :
+    print("Hello")
+    pygame.init()
+    time = 0.0
+    clock = pygame.time.Clock()
+    #interface = Interface(talia_gracza,talia_gracza_po_spilt,talia_krupiera)
+    game_work = True
+    window = pygame.display.set_mode((width_w, height_w))
+    in_menu = True
+    in_game = False
+    in_menu_kon = False
+    frap = True
+    menu = Menu()
+
+    time2 = 0.0
+    #Pętla główna
+    while game_work:
 
 
-class Game:
-    def __init__(self):
-        self.ms_max = 50.0
-        pygame.init()
-        self.window = pygame.display.set_mode((width_w, height_w))
-        self.time = 0.0
-        self.clock = pygame.time.Clock()
-        self.work = True
-        self.in_menu = True
-        self.in_game = False
-        self.menu = Menu()
+        #cykle
+        time += clock.tick()
 
+        if time > (1000 / 5): #20 cykli na sekunde
+            time2 += time
+            time = 0.0
 
-    def main_loop(self):
-        while self.work:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT or event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                    self.work = False
+                    game_work = False
+                    return 0
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    if self.in_menu:
-                        self.menu.check_all_buttons(event.pos)
-                    elif self.in_game:
-                        game.pause()
-                        print("pause")
-                        #self..check_all_buttons(event.pos)
+                    if in_menu:
+                        game = menu.check_all_buttons(event.pos, window)
+                        if game[0] == "start":
+                            in_menu = False
+                            in_game = True
+                    elif in_game:
+                        interface = game[1].check_all_buttons(event.pos, window)
+                        if interface[0] == "end":
+                            game[1].update_cards(window, True)
+                            in_game = False
+                            in_menu_kon = True
+                    elif in_menu_kon:
+                        kon = interface[1].check_all_buttons(event.pos, window)
+                        if kon == "restart":
+                            in_menu = True
+                            in_menu_kon = False
+                            del game
+                            frap = True
+                            print("GH")
 
-                    #print("klawisz myszki", event.button, "wcisniety na poz", event.pos)
+            window.fill(green)
+            if in_menu:
+                menu.draw(window)
+                #print("s")
+                pygame.display.flip()
+            elif in_game:
+                if frap:
+                    game[1].draw(window)
+                    pygame.display.flip()
+                    frap = False
+            #pygame.display.flip()
+            elif in_menu_kon:
+                interface[1].draw(window)
 
-            # ograniczenie ilości klatek
+            #interface.update()
+            #print("g")
+            #print(interface.get_feedback())
 
-            self.time += self.clock.tick()
-            if self.time >= self.ms_max :
-                self.time = 0.0
-                self.tick()
-            self.draw()
 
-    def start_game(self):
-        self.in_menu = False
-        self.in_game = True
-        #...........
 
-    def pause(self):
-        self.in_game = False
-        self.in_menu = True
-        self.menu.add_resume_button()
 
-    def resume(self):
-        self.in_game = True
-        self.in_menu = False
+talia = (("as",0, "Kier"), ("jedynka",1, "Kier"), ("dwojka",2, "Kier"), ("trojka",3, "Kier"), ("czworka",4, "Kier"), ("piatka",5, "Kier"))#,
+          #(szostka,6, Kier), (dziewiatka,9, Kier), (dziesiatka,10, Kier), (jopek,10, Kier), (dama,10, Kier),
+          #(krol,10, Kier), (as,0, Pik), (jedynka,1, Pik), (dwojka,2, Pik), (trojka,3, Pik), (czworka,4, Pik),
+          #(piatka,5, Pik), (szostka,6, Pik), (dziewiatka,9, Pik), (dziesiatka,10, Pik), (jopek,10, Pik), (dama,10, Pik),
+          #(krol,10, Pik), (as,0, Trefl), (jedynka,1, Trefl), (dwojka,2, Trefl), (trojka,3, Trefl), (czworka,4, Trefl),
+          #(piatka,5, Trefl), (szostka,6, Trefl), (dziewiatka,9, Trefl), (dziesiatka,10, Trefl), (jopek,10, Trefl),
+          #(dama,10, Trefl), (krol,10, Trefl), (as,0, Karo), (jedynka,1, Karo), (dwojka,2, Karo), (trojka,3, Karo),
+          #(czworka,4, Karo), (piatka,5, Karo), (szostka,6, Karo), (dziewiatka,9, Karo), (dziesiatka,10, Karo),
+          #(jopek,10, Karo), (dama,10, Karo), (krol,10, Karo))
 
-    def tick(self):
-        self.window.fill(green)
 
-    def draw(self):
-        if self.in_menu:
-            self.menu.draw(self.window)
+talia_gracza = [
+        (11,"As","Pik"),
+        (3,"3","Kier"),
+        (5,"5","Karo"),
+        (7,"7","Pik"),
+        (9,"9","Trefl"),
+        (10,"Dama","Pik"),
+        (11,"As","Pik"),
+        (10,"Król","Karo")
+        ]
 
-        #self.window.fill((0,0,0))
-        #pygame.draw.rect(self.window,(100,100,100),self.kwadrat)
-        pygame.display.flip()
+talia_gracza_po_spilt = [
+        #(1,"As","Pik"),
+        #(3,"3","Kier")
+        ]
 
-print("dziala2")
-if __name__ == "__main__":
-    print("dziala")
-    game = Game()
-    game.main_loop()
+talia_krupiera = [
+        (11,"As","Pik"),
+        (105,"5","Trefl"),
+        ]
+if __name__=="__main__":
+    main()
