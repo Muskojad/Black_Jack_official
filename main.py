@@ -1,5 +1,6 @@
 import pygame
 
+
 from menu_GUI import Menu
 
 width_w = 1000
@@ -16,6 +17,7 @@ def main() :
     pygame.init()
     time = 0.0
     clock = pygame.time.Clock()
+
     #interface = Interface(talia_gracza,talia_gracza_po_spilt,talia_krupiera)
     game_work = True
     window = pygame.display.set_mode((width_w, height_w))
@@ -25,10 +27,10 @@ def main() :
     frap = True
     menu = Menu()
 
+
     time2 = 0.0
     #Pętla główna
     while game_work:
-
 
         #cykle
         time += clock.tick()
@@ -92,6 +94,7 @@ talia = (("as",0, "Kier"), ("jedynka",1, "Kier"), ("dwojka",2, "Kier"), ("trojka
           #(dama,10, Trefl), (krol,10, Trefl), (as,0, Karo), (jedynka,1, Karo), (dwojka,2, Karo), (trojka,3, Karo),
           #(czworka,4, Karo), (piatka,5, Karo), (szostka,6, Karo), (dziewiatka,9, Karo), (dziesiatka,10, Karo),
           #(jopek,10, Karo), (dama,10, Karo), (krol,10, Karo))
+
 
 
 talia_gracza = [
