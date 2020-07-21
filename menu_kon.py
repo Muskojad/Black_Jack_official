@@ -14,17 +14,17 @@ class Menu_kon():
     def __init__(self, won , lost, window):
         self.won = won
         self.lost = lost
-        self.width_rect = 100
+        self.width_rect = 200
         self.height_rect = 50
         self.font = pygame.font.SysFont('Arial', 25)
         self.font_arrow = pygame.font.SysFont('Arial', 20)
         self.font_color = (0, 0, 0)
         self.basic_col = (29, 59, 207)
-
-        self.button_back = pygame.Rect(500, 300, self.width_rect, self.height_rect)
-        self.lost_rect = pygame.Rect(500, 100, self.width_rect, self.height_rect)
-        self.won_rect = pygame.Rect(500, 100, self.width_rect, self.height_rect)
-        self.pass_rect = pygame.Rect(500, 100, self.width_rect, self.height_rect)
+        self.center_x = int((1000 - self.width_rect) / 2)
+        self.button_back = pygame.Rect(self.center_x, 300, self.width_rect, self.height_rect)
+        self.lost_rect = pygame.Rect(self.center_x, 100, self.width_rect, self.height_rect)
+        self.won_rect = pygame.Rect(self.center_x, 100, self.width_rect, self.height_rect)
+        self.pass_rect = pygame.Rect(self.center_x, 100, self.width_rect, self.height_rect)
         pygame.time.wait(2000)
 
     def draw(self, window):
@@ -35,7 +35,7 @@ class Menu_kon():
 
         text_back = self.font_arrow.render("Back to menu", True, self.font_color)
         text_lost = self.font_arrow.render("You lost", True, self.font_color)
-        text_won = self.font_arrow.render("You Won", True, self.font_color)
+        text_won = self.font_arrow.render("You won", True, self.font_color)
         text_pass = self.font_arrow.render("Pass", True, self.font_color)
 
         if self.won and not self.lost:
