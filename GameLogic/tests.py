@@ -1,7 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# for el in range(1):
-#     print(el)
+#
+#   W TYM PLIKU TESTUJE KOD
+#
 
-import classes
+print("|\‾/|\n"
+        "| X |\n"
+        "|/_\|\n")

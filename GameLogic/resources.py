@@ -1,6 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+#
+#   W TYM PLIKU ZAPISANE SĄ WSZYSTKIE PODSTAWOWE WARTOŚCI
+#
+
 DEFAULT_DECK = [('Ace', 0, 'Diamond'), ('2', 2, 'Diamond'), ('3', 3, 'Diamond'), ('4', 4, 'Diamond'),
                          ('5', 5, 'Diamond'), ('6', 6, 'Diamond'), ('7', 7, 'Diamond'), ('8', 8, 'Diamond'),
                          ('9', 9, 'Diamond'), ('10', 10, 'Diamond'), ('Jack', 10, 'Diamond'),
@@ -15,8 +19,14 @@ DEFAULT_DECK = [('Ace', 0, 'Diamond'), ('2', 2, 'Diamond'), ('3', 3, 'Diamond'),
                          ('4', 4, 'Heart'), ('5', 5, 'Heart'), ('6', 6, 'Heart'), ('7', 7, 'Heart'),
                          ('8', 8, 'Heart'), ('9', 9, 'Heart'), ('10', 10, 'Heart'), ('Jack', 10, 'Heart'),
                          ('Queen', 10, 'Heart'), ("King", 10, 'Heart')]
+DEFAULT_DECK_LEN = 52
 
 DEFAULT_BET = [10]
 DEFAULT_SCORE = [0]
 DEFAULT_CARDS = [[]]
 DEFAULT_BUDGET = [200]
+
+NUM_PLAYERS = 1  # musi być mniejszy niż 8 bo tak
+NUM_DECKS = 2
+
+BET_MIN = 10
