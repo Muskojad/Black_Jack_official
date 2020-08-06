@@ -5,14 +5,6 @@
 #   W TYM PLIKU TESTUJE KOD
 #
 
-import classes
-import utility
+import utility as ut
 
-deck = classes.Deck()
-game = classes.Game()
-
-game.first_round(deck)
-game.enter_new_round()
-utility.print_player_list(game)
-game.player_list[0].
-#game.round_menu(deck)
+print(ut.add_cards([('Ace', 0, 'Diamond'), ('2', 2, 'Diamond')]))
