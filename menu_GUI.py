@@ -115,7 +115,7 @@ class Menu(object):
 
     def check_all_buttons(self, pos, window):
         if self.click(self.button_start, pos[0], pos[1]):
-            interface_GUI = Interface_GUI(self.num_decs, self.hotseat, window, self.time)
+            interface_GUI = Interface_GUI(self.num_decs, self.hotseat, window, self.time, self.bet)
             #game.start_game()
             print("start game")
             return ("start", interface_GUI)       ##############

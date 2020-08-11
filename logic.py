@@ -4,12 +4,16 @@ from menu_kon import Menu_kon
 talia_0 = [
     (11, "As", "Pik"),
     (3, "3", "Kier"),
+    (3, "3", "Kier"),
+    (3, "3", "Kier"),
+    (3, "3", "Kier"),
+    (3, "3", "Kier"),
     (5, "5", "Karo"),
     (7, "7", "Pik"),
-    (9, "9", "Trefl"),
-    (10, "Dama", "Pik"),
-    (11, "As", "Pik"),
-    (10, "Krol", "Karo")
+    #(9, "9", "Trefl"),
+    #(10, "Dama", "Pik"),
+    #(11, "As", "Pik"),
+    #(10, "Krol", "Karo")
 ]
 
 
@@ -24,8 +28,13 @@ class Cards(object):
         self.talia_krupiera = self.talia[:2]
         #print(self.talia_krupiera)
         self.talia_gracza = self.talia[2:4]
+        self.talia_split = []
         #print(self.talia_gracza)
         self.it = 4
+        self.odslon = False
+        self.in_split = False
+        #self.possible = ["hit", "double"]
+        self.possible_dict = {"hit": True, "stand":True, "double":True, "split":False, "insure":False}
     def hit(self):
         self.talia_gracza.append(self.talia[self.it])
         self.it += 1
@@ -35,9 +44,26 @@ class Cards(object):
             suma += y[0]
         if suma > 21:
             return True
-            print("busted")
-            menu_kon = Menu_kon(0, 1, self.window)
+            #print("busted")
+            #menu_kon = Menu_kon(0, 1, self.window)
         return False
+
+    def hit_split(self):
+        self.talia_split.append(self.talia[self.it])
+        self.it += 1
+        print("dodales do splitu")
+        suma = 0
+        for y in self.talia_split:
+            suma += y[0]
+        if suma > 21:
+            self.in_split = False
+
+
+    def split(self):
+        self.talia_split.append(self.talia_gracza[0])
+        self.talia_gracza.pop()
+        self.in_split = True
+
     def krupier_hit(self):
         self.talia_krupiera.append(self.talia[self.it])
 
@@ -72,6 +98,23 @@ class Cards(object):
             print("wygrales")
             return (1, 0)
             menu_kon = Menu_kon(1, 0, self.window)
+
+    def possible(self):
+        print(self.talia_gracza[0][0])
+        print("dfdfdfdfd")
+        #print(self.talia_gracza[1][0])
+        if len(self.talia_gracza) == 2:
+            self.possible_dict["double"] = True
+        else:
+            self.possible_dict["double"] = False
+        if len(self.talia_gracza) >=2 and self.talia_gracza[0][0] == self.talia_gracza[1][0] and self.possible_dict["double"]:
+            self.possible_dict["split"] = True
+        else:
+            self.possible_dict["split"] = False
+        if self.talia_krupiera[0][1] == "As":
+            self.possible_dict["insure"] = True
+        else:
+            self.possible_dict["insure"] = False
 
 
 
