@@ -1,5 +1,8 @@
 import pygame
 from Interface_GUI import Interface_GUI
+import os
+import pickle
+
 
 width_w = 1000
 height_w = 700
@@ -21,9 +24,10 @@ class Menu(object):
         self.num_decs = 1
         self.hotseat = False
         self.paused = False
+        self.can_load = os.path.isfile('./save')
         self.time = 5
-        self.font = pygame.font.SysFont('Arial', 25)
-        self.font_arrow = pygame.font.SysFont('Arial', 20)
+        self.font = pygame.font.Font("OpenSans-Regular.ttf", 25)
+        self.font_arrow = pygame.font.Font("OpenSans-Regular.ttf", 20)
         self.font_color = (0, 0, 0)
         self.basic_col = (29, 59, 207)
         self.up_col = (29, 186, 207)
@@ -44,6 +48,8 @@ class Menu(object):
         self.up_down = int(self.height_rect / 2)  # wysokść up_down
         self.up_down_x = self.center_x + self.width_rect - self.up_down * 2
 
+        self.button_load = pygame.Rect(self.center_x, self.y_start - 100, self.width_rect, self.height_rect)
+
         self.button_start = pygame.Rect(self.center_x, self.y_start, self.width_rect, self.height_rect)
         self.button_bet = pygame.Rect(self.center_x, self.y_bet, self.width_rect - self.up_down * 2, self.height_rect)
         self.button_bet_up = pygame.Rect(self.up_down_x, self.y_bet, self.up_down * 2, self.up_down)
@@ -63,6 +69,11 @@ class Menu(object):
         #self.button_resume = pygame.Rect(self.center_x, self.y_start - 100, self.width_rect, self.height_rect)
 
     def draw(self, window):
+        if os.path.isfile('./save'):
+            pygame.draw.rect(window, self.basic_col, self.button_load)
+            text_load = self.font.render('Load last game', True, self.font_color)
+            window.blit(text_load, center_text(text_load, self.button_load))
+
         pygame.draw.rect(window, self.basic_col, self.button_start)
 
         pygame.draw.rect(window, self.basic_col, self.button_bet)
@@ -114,6 +125,15 @@ class Menu(object):
         window.blit(text_stats, center_text(text_stats, self.button_stats))
 
     def check_all_buttons(self, pos, window):
+
+        if self.can_load and self.click(self.button_load, pos[0], pos[1]):
+            list_all = pickle.load(open("save", "rb"))
+            list = list_all[-1]
+            interface_GUI = Interface_GUI(list[5], list[6], window, self.time, list[7])
+            interface_GUI.cards = list[0]
+            interface_GUI.time_left = list[4]
+            return("load", interface_GUI, list, list_all)
+
         if self.click(self.button_start, pos[0], pos[1]):
             interface_GUI = Interface_GUI(self.num_decs, self.hotseat, window, self.time, self.bet)
             #game.start_game()

@@ -1,4 +1,5 @@
 import pygame
+import os
 green = (36, 143, 46)
 
 def center_text(text, list):
@@ -16,8 +17,8 @@ class Menu_kon():
         self.lost = lost
         self.width_rect = 200
         self.height_rect = 50
-        self.font = pygame.font.SysFont('Arial', 25)
-        self.font_arrow = pygame.font.SysFont('Arial', 20)
+        self.font = pygame.font.Font("OpenSans-Regular.ttf", 25)
+        self.font_arrow = pygame.font.Font("OpenSans-Regular.ttf", 20)
         self.font_color = (0, 0, 0)
         self.basic_col = (29, 59, 207)
         self.center_x = int((1000 - self.width_rect) / 2)
@@ -25,7 +26,9 @@ class Menu_kon():
         self.lost_rect = pygame.Rect(self.center_x, 100, self.width_rect, self.height_rect)
         self.won_rect = pygame.Rect(self.center_x, 100, self.width_rect, self.height_rect)
         self.pass_rect = pygame.Rect(self.center_x, 100, self.width_rect, self.height_rect)
-        pygame.time.wait(2000)
+        if os.path.exists("save"):
+            os.remove("save")
+        #pygame.time.wait(2000)
 
     def draw(self, window):
 

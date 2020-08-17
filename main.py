@@ -1,6 +1,8 @@
 import pygame
+import pickle
 from menu_kon import Menu_kon
 from menu_GUI import Menu
+import copy
 
 width_w = 1000
 height_w = 700
@@ -22,21 +24,21 @@ def main():
     in_menu_kon = False
     it = 0
     time_game = 0
+    load_list = []
     menu = Menu()
 
     time2 = 0.0
     # Pętla główna
     while game_work:
-
-        # cykle
         time += clock.tick(30)
-        # if time > (1000 / 5): #20 cykli na sekunde
         time2 += time
-
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT or event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 game_work = False
+                if in_game:
+                    load_list.append([copy.deepcopy(game[1].cards), it, in_menu, in_game, game[1].time_left, menu.num_decs, menu.hotseat, menu.bet])
+                    pickle.dump(load_list, open("save", "wb"))
                 return 0
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if in_menu:
@@ -44,14 +46,43 @@ def main():
                     if game[0] == "start":
                         in_menu = False
                         in_game = True
+                    if game[0] == "load":
+                        in_menu = game[2][2]
+                        in_game = game[2][3]
+                        it = game[2][1]
+                        load_list = game[3]
+                        game[1].load_it = len(game[3])
                 elif in_game:
                     interface = game[1].check_all_buttons(event.pos, window)
-                    if interface[0] == "end":
-                        #game[1].update_cards(window, True)
+                    #print(load_list[0][0].talia_gracza, "       ", len(load_list))
+                    if interface[0] == "end_busted":
                         in_game = False
                         in_menu_kon = False
                         it += 1
                         time_game = 0
+                    if interface[0] == "end":
+                        #game[1].update_cards(window, True)
+                        in_game = False
+                        in_menu_kon = False
+                        #it += 1
+                        time_game = 0
+                    if interface == "undo":
+                        game[1].cards = copy.deepcopy(load_list[-2][0])
+                        game[1].time_left = load_list[-2][4]
+                        game[1].load_it -= 1
+                        it = load_list[-2][1]
+                        load_list.pop()
+                    if interface == "hit":
+                        it += 1
+                    if interface != "nothing_clicked" and interface != "undo":
+                        print("append")
+                        load_list.append(
+                            [copy.deepcopy(game[1].cards), it, in_menu, in_game, game[1].time_left, menu.num_decs, menu.hotseat,
+                             menu.bet])
+                        game[1].load_it += 1
+
+
+
                 elif in_menu_kon:
                     kon = interface[1].check_all_buttons(event.pos, window)
                     if kon == "restart":
@@ -76,6 +107,11 @@ def main():
             if time_game > 1000 and it < length:
                 it +=1
                 time_game = 0
+                if it == 4:
+                    load_list.append(
+                        [copy.deepcopy(game[1].cards), it, in_menu, in_game, game[1].time_left, menu.num_decs, menu.hotseat,
+                         menu.bet])
+                    game[1].load_it += 1
             game[1].update_cards(window, it)
             pygame.display.flip()
             time_game += time
@@ -89,12 +125,12 @@ def main():
         # pygame.display.flip()
         elif not in_game and not in_menu_kon:
             length = len(game[1].cards.talia_gracza) + len(game[1].cards.talia_krupiera) + len(game[1].cards.talia_split)
-            if time_game > 5000 and it <= length:
+            if time_game > 2000 and it <= length:
                 it += 1
                 time_game = 0
             time_game += time
             game[1].cards.odslon = True
-            print(game[1].cards.odslon, "sssssssssssssss")
+            #print(game[1].cards.odslon, "sssssssssssssss")
             game[1].update_cards(window, it)
             print(game[1].cards.talia_krupiera)
             #pygame.time.wait(100)

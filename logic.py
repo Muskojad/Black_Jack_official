@@ -8,6 +8,8 @@ talia_0 = [
     (3, "3", "Kier"),
     (3, "3", "Kier"),
     (3, "3", "Kier"),
+    (3, "3", "Kier"),
+    (3, "3", "Kier"),
     (5, "5", "Karo"),
     (7, "7", "Pik"),
     #(9, "9", "Trefl"),
@@ -18,8 +20,8 @@ talia_0 = [
 
 
 class Cards(object):
-    def __init__(self, num_decks, window):
-        self.window = window
+    def __init__(self, num_decks):
+        #self.window = window
         #hile num_decks > 0:
          #   talia = talia_0.append(talia_0)
         self.talia = random.sample(talia_0 * num_decks, len(num_decks*talia_0))
@@ -41,7 +43,10 @@ class Cards(object):
         print("dodales")
         suma = 0
         for y in self.talia_gracza:
-            suma += y[0]
+            if y[0] == 11:
+                suma += 1
+            else:
+                suma += y[0]
         if suma > 21:
             return True
             #print("busted")
@@ -82,28 +87,40 @@ class Cards(object):
 
             print("krupier hit")
 
-        sum_gracz = 0
-        for y in self.talia_gracza:
-            sum_gracz += y[0]
-        print("HHHHHHHHHHHHHHHHH")
+        sum_gracz = self.sum_kart(self.talia_gracza)
+        #for y in self.talia_gracza:
+            #sum_gracz += y[0]
         if abs(21-sum) < abs(21-sum_gracz):
             return (0, 1)
-            menu_kon = Menu_kon(0, 1, self.window)
+            #menu_kon = Menu_kon(0, 1, self.window)
             print("przegrałeś")
         elif abs(21-sum) == abs(21-sum_gracz):
             print("remis")
             return (1, 1)
-            menu_kon = Menu_kon(1, 1, self.window)
+            m#enu_kon = Menu_kon(1, 1, self.window)
         else:
             print("wygrales")
             return (1, 0)
-            menu_kon = Menu_kon(1, 0, self.window)
+            #menu_kon = Menu_kon(1, 0, self.window)
+    def sum_kart(self, talia, ile_as_to_1 = 0):
+        sum = 0
+        for y in talia:
+            if ile_as_to_1 > 0 and y[0] == 11:
+                sum += 1
+                ile_as_to_1 -= 1
+            else:
+                sum += y[0]
+
+        if sum > 21:
+            sum = self.sum_kart(talia, ile_as_to_1 + 1)
+        return sum
+
 
     def possible(self):
-        print(self.talia_gracza[0][0])
-        print("dfdfdfdfd")
+        #print(self.talia_gracza[0][0])
+        #print("dfdfdfdfd")
         #print(self.talia_gracza[1][0])
-        if len(self.talia_gracza) == 2:
+        if len(self.talia_gracza) == 2 and len(self.talia_split) == 0:
             self.possible_dict["double"] = True
         else:
             self.possible_dict["double"] = False
