@@ -1,4 +1,3 @@
-
 import pygame
 #Do czyszczenia konsoli
 import os
@@ -122,7 +121,6 @@ class Interface():
 
         if(error_communicat):
             print(" Podano błędny komunikat wejściowy ! ")
-
 
 
 

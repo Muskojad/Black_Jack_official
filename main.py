@@ -72,7 +72,7 @@ def main():
             game[1].time_left -= time/1000
 
             game[1].draw(window)
-            length = len(game[1].cards.talia_gracza) + len(game[1].cards.talia_krupiera)
+            length = len(game[1].cards.talia_gracza) + len(game[1].cards.talia_krupiera) + len(game[1].cards.talia_split)
             if time_game > 1000 and it < length:
                 it +=1
                 time_game = 0
@@ -88,7 +88,7 @@ def main():
                 #it += 1
         # pygame.display.flip()
         elif not in_game and not in_menu_kon:
-            length = len(game[1].cards.talia_gracza) + len(game[1].cards.talia_krupiera)
+            length = len(game[1].cards.talia_gracza) + len(game[1].cards.talia_krupiera) + len(game[1].cards.talia_split)
             if time_game > 5000 and it <= length:
                 it += 1
                 time_game = 0
