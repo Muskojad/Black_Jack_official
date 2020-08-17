@@ -5,6 +5,21 @@
 #   W TYM PLIKU TESTUJE KOD
 #
 
-import utility as ut
+had_hit = False
+had_stood = False
+had_doubled = False
 
-print(ut.add_cards([('Ace', 0, 'Diamond'), ('2', 2, 'Diamond')]))
+
+def can_double_down1():
+    if not had_hit and not had_stood and not had_doubled:
+        return True
+    else:
+        return False
+
+
+def can_double_down2():
+    return not had_hit and not had_stood and not had_doubled
+
+
+print(can_double_down1())
+print(can_double_down2())
