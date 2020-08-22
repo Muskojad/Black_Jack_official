@@ -2,6 +2,7 @@ import pygame
 from Interface_GUI import Interface_GUI
 import os
 import pickle
+import classes
 
 
 width_w = 1000
@@ -23,6 +24,7 @@ class Menu(object):
     def __init__(self):
         self.num_decs = 1
         self.hotseat = False
+        self.players = 2
         self.paused = False
         self.can_load = os.path.isfile('./save')
         self.time = 5
@@ -32,18 +34,19 @@ class Menu(object):
         self.basic_col = (29, 59, 207)
         self.up_col = (29, 186, 207)
         self.down_col = (29, 207, 56)
-        self.width_rect = 200
+        self.width_rect = 250
         self.height_rect = 50
         self.center_x = int((width_w - self.width_rect) / 2)
-        self.dist = 50
+        self.dist = 30
         self.bet = 10
 
         self.y_start = int(
-            (height_w - 5 * self.height_rect - 4 * self.dist) / 2)  # 4 - liczba poziomych przycisków do wysrodkowania
+            (height_w - 6 * self.height_rect - 5 * self.dist) / 2)  # 4 - liczba poziomych przycisków do wysrodkowania
         self.y_bet = self.y_start + self.dist + self.height_rect
         self.y_deck = self.y_start + 2 * (self.dist + self.height_rect)
         self.y_hotseat = self.y_start + 3 * (self.dist + self.height_rect)
-        self.y_stats = self.y_start + 4 * (self.dist + self.height_rect)
+        self.y_players = self.y_start + 4 * (self.dist + self.height_rect)
+        self.y_stats = self.y_start + 5 * (self.dist + self.height_rect)
 
         self.up_down = int(self.height_rect / 2)  # wysokść up_down
         self.up_down_x = self.center_x + self.width_rect - self.up_down * 2
@@ -64,6 +67,7 @@ class Menu(object):
         self.button_hotseat_off = pygame.Rect(self.up_down_x, self.y_hotseat, self.up_down * 2, self.up_down * 2)
         self.button_hotseat_up = pygame.Rect(self.up_down_x, self.y_hotseat, self.up_down * 2, self.up_down)
         self.button_hotseat_down = pygame.Rect(self.up_down_x, self.y_hotseat + self.up_down, self.up_down * 2, self.up_down)
+        self.button_players = pygame.Rect(self.center_x, self.y_players, self.width_rect, self.height_rect)
         self.button_stats = pygame.Rect(self.center_x, self.y_stats, self.width_rect, self.height_rect)
 
         #self.button_resume = pygame.Rect(self.center_x, self.y_start - 100, self.width_rect, self.height_rect)
@@ -84,16 +88,21 @@ class Menu(object):
         pygame.draw.rect(window, self.up_col, self.button_deck_up)
         pygame.draw.rect(window, self.down_col, self.button_deck_down)
         pygame.draw.rect(window, self.basic_col, self.button_hotseat)
+        pygame.draw.rect(window, self.basic_col, self.button_players)
         pygame.draw.rect(window, self.basic_col, self.button_stats)
-        if self.paused:
-            pygame.draw.rect(window, self.basic_col, self.button_resume)
-            text_resume = self.font.render('Resume', True, self.font_color)
-            window.blit(text_resume, self.center_text(text_resume, self.button_resume))
+        # if self.paused:
+        #     pygame.draw.rect(window, self.basic_col, self.button_resume)
+        #     text_resume = self.font.render('Resume', True, self.font_color)
+        #     window.blit(text_resume, self.center_text(text_resume, self.button_resume))
 
         text_start = self.font.render('Start', True, self.font_color)
         text_bet = self.font.render("Bet " + str(self.bet) +"$", True, self.font_color)
         text_bet_up = self.font_arrow.render('↑', True, self.font_color)
         text_bet_down = self.font_arrow.render('↓', True, self.font_color)
+        if self.players == 1:
+            text_players = self.font.render('1 Player', True, self.font_color)
+        else:
+            text_players = self.font.render(str(self.players) + ' Players', True, self.font_color)
 
 
         if self.num_decs == 1:
@@ -105,9 +114,9 @@ class Menu(object):
         text_hotseat_up = self.font_arrow.render('↑', True, self.font_color)
         text_hotseat_down = self.font_arrow.render('↓', True, self.font_color)
         if not self.hotseat:
-            text_hotseat = self.font.render('Hot-seat: OFF', True, self.font_color)
+            text_hotseat = self.font.render('Time limit: OFF', True, self.font_color)
         else:
-            text_hotseat = self.font.render('Hot-seat: ' + str(self.time) + "s", True, self.font_color)
+            text_hotseat = self.font.render('Time limit: ' + str(self.time) + "s", True, self.font_color)
             pygame.draw.rect(window, self.up_col, self.button_hotseat_up)
             pygame.draw.rect(window, self.down_col, self.button_hotseat_down)
             window.blit(text_hotseat_up, center_text(text_hotseat_up, self.button_hotseat_up))
@@ -122,6 +131,7 @@ class Menu(object):
         window.blit(text_deck_up, center_text(text_deck_up, self.button_deck_up))
         window.blit(text_deck_down, center_text(text_deck_down, self.button_deck_down))
         window.blit(text_hotseat, center_text(text_hotseat, self.button_hotseat))
+        window.blit(text_players, center_text(text_players, self.button_players))
         window.blit(text_stats, center_text(text_stats, self.button_stats))
 
     def check_all_buttons(self, pos, window):
@@ -130,11 +140,13 @@ class Menu(object):
             list_all = pickle.load(open("save", "rb"))
             list = list_all[-1]
             interface_GUI = Interface_GUI(list[5], list[6], window, self.time, list[7])
-            interface_GUI.cards = list[0]
+            interface_GUI.game = list[0]
             interface_GUI.time_left = list[4]
             return("load", interface_GUI, list, list_all)
 
         if self.click(self.button_start, pos[0], pos[1]):
+            classes.NUM_PLAYERS = self.players
+            classes.NUM_DECKS = self.num_decs
             interface_GUI = Interface_GUI(self.num_decs, self.hotseat, window, self.time, self.bet)
             #game.start_game()
             print("start game")
@@ -162,6 +174,7 @@ class Menu(object):
         if self.click(self.button_hotseat, pos[0], pos[1]):
             self.hotseat = not (self.hotseat)
             if self.hotseat:
+                self.players = 1
                 self.button_hotseat = pygame.Rect(self.center_x, self.y_hotseat, self.width_rect-2*self.up_down, self.height_rect)
             else:
                 self.button_hotseat = pygame.Rect(self.center_x, self.y_hotseat, self.width_rect, self.height_rect)

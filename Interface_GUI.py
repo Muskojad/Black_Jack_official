@@ -1,8 +1,11 @@
 import pygame
 import pickle
-from logic import Cards
+#from logic import Cards
 from menu_kon import Menu_kon
+from classes import Game
+from classes import can_insure
 
+#from classes import Deck
 width_w = 1000
 height_w = 700
 
@@ -52,27 +55,38 @@ class Interface_GUI():
         self.button_time = pygame.Rect(950-self.dist-self.width_rect, self.dist, self.width_rect+50, self.height_rect)
         self.button_insure = pygame.Rect(self.x_insure, self.y, self.width_rect, self.height_rect)
         self.button_bet = pygame.Rect(self.x_double, self.y - self.dist - self.height_rect, self.width_rect, self.height_rect)
-
-        self.cards = Cards(self.num_decks)
+        self.button_player = pygame.Rect(self.x_double, self.y - self.dist - 2*self.height_rect, self.width_rect, self.height_rect)
+#        self.cards = Cards(self.num_decks)
         self.it_x = 0
         self.it_y = 0
+        self.odslon = False
+        self.in_split = False
+        self.game = Game()
+#        self.deck = Deck()
+        self.game.first_round()
+        print(self.game)
+        self.current_player = 0
+
 
 
     def draw(self, window):
-        self.cards.possible()
         if self.can_click:
             self.basic_col = (29, 59, 207)
         else:
             self.basic_col = (192, 192, 192)
         hit_col = self.basic_col
         stand_col = self.basic_col
-        #print(self.cards.possible_dict)
-        if self.cards.possible_dict["double"]: double_col = self.basic_col
+        print(self.current_player)
+        if self.game.player_list[self.current_player].can_double_down(): double_col = self.basic_col
         else: double_col = self.grey
-        if self.cards.possible_dict["split"]: split_col = self.basic_col
+        if self.game.player_list[self.current_player].can_split():
+            split_col = self.basic_col
         else: split_col = self.grey
-        if self.cards.possible_dict["insure"]: insure_col = self.basic_col
-        else: insure_col = self.grey
+        #print(can_insure(self.game.dealer))                     ##############################
+        if can_insure(self.game.dealer):
+            insure_col = self.basic_col          #do zmiany
+        else:
+            insure_col = self.grey
 
         if self.load_it > 1:
             pygame.draw.rect(window, hit_col, self.button_back)
@@ -92,6 +106,7 @@ class Interface_GUI():
         text_split = self.font.render("Split", True, self.font_color)
         text_insure = self.font.render("Insure", True, self.font_color)
         text_bet = self.font.render(str(self.bet) + "$", True, self.font_color)
+        text_player = self.font.render("Player " + str(self.current_player+1), True, self.font_color)
 
         if self.time_left <= 0:
             text_time = self.font.render("0 s left", True, self.font_color)
@@ -107,11 +122,13 @@ class Interface_GUI():
         window.blit(text_split, center_text(text_split, self.button_split))
         window.blit(text_insure, center_text(text_insure, self.button_insure))
         window.blit(text_bet, center_text(text_bet, self.button_bet))
+        window.blit(text_player, center_text(text_player, self.button_player))
         #print("d")
         #pygame.display.flip()
         #self.update_cards(window)#false
 
     def check_all_buttons(self, pos, window):
+        
         if self.can_click:
             self.basic_col = (29, 59, 207)
             print(self.load_it)
@@ -123,30 +140,37 @@ class Interface_GUI():
 
             elif self.click(self.button_hit, pos[0], pos[1]):
                 print("Hit")
-                if self.cards.in_split:
-                    self.cards.hit_split()
-                else:
-                    busted = self.cards.hit()
-                    if busted:
+                # if self.cards.in_split:
+                #     self.cards.hit_split()
+                # else:
+                self.game.player_list[self.current_player].hit()
+                    #busted = self.cards.hit()
+                    #if busted:
                         #self.update_cards(window)
-                        self.cards.odslon = True
-                        print('test')
-                        menu_kon = Menu_kon(0, 1, window)
-                        return ("end_busted", menu_kon)
+                        #self.cards.odslon = True
+                        #print('test')
+                        #menu_kon = Menu_kon(0, 1, window)
+                        #return ("end_busted", menu_kon)
                 return "hit"
                 
             elif self.click(self.button_stand, pos[0], pos[1]):
                 print("Stand")
-                if self.cards.in_split: self.cards.in_split = False
-                else:
-                    krupier = self.cards.krupier()
-                    self.cards.odslon = True
-                    #self.update_cards(window) ####################
-                    menu_kon = Menu_kon(krupier[0], krupier[1], window)
-                    return ("end", menu_kon)
-            elif self.cards.possible_dict["split"] and self.click(self.button_split, pos[0], pos[1]):
+                self.game.player_list[self.current_player].stand()
+                if self.game.player_list[self.current_player].cards_split: self.in_split = True
+                #else:
+                krupier = self.cards.krupier()
+                self.cards.odslon = True
+                #self.update_cards(window) ####################
+                menu_kon = Menu_kon(krupier[0], krupier[1], window)
+                return ("end", menu_kon)
+            elif self.game.player_list[self.current_player].can_split() and self.click(self.button_split, pos[0], pos[1]):
                 print("Split")
-                self.cards.split()
+                self.game.player_list[self.current_player].split()
+                print(self.game)
+                print(self.game.player_list[self.current_player].cards)
+            elif self.game.player_list[self.current_player].can_double_down() and self.click(self.button_double, pos[0], pos[1]):
+                print("Double")
+                self.game.player_list[self.current_player].double_down()
             else:
                 return "nothing_clicked"
         else:
@@ -163,15 +187,16 @@ class Interface_GUI():
     def update_cards(self, window, it):
         self.can_click = False
         x_0 = 0
-        while x_0 < len(self.cards.talia_gracza) and x_0 <it:
-            x = self.cards.talia_gracza[x_0]
-            #print(it)
-            if self.cards.in_split:
-                nazwa_pliku = x[1] + "_" + x[2] + "_g.png"
-            else:
-                nazwa_pliku = x[1] + "_" + x[2] + ".png"
+        talia = self.game.player_list[self.current_player].cards
+        while x_0 < len(talia) and x_0 <it:
+            x = talia[x_0]
+            #print(x)
+            if self.in_split:
+                nazwa_pliku = x[0] + "_" + x[2] + "_g.png"
+            else:nazwa_pliku = x[0] + "_" + x[2] + ".png"
+            #nazwa_pliku = x[0] + "_" + x[2] + ".png"
             #print(nazwa_pliku)
-            if self.cards.talia_split: x_start = 665
+            if self.game.player_list[0].cards_split: x_start = 665
             else: x_start = 425
             img = pygame.image.load(nazwa_pliku)
             window.blit(img, (x_start + (x_0 * 80), 350 ))
@@ -182,13 +207,14 @@ class Interface_GUI():
             x_0 += 1
 
         s_0 = 0
-        while s_0 < len(self.cards.talia_split) and s_0 + x_0 < it:
-            x = self.cards.talia_split[s_0]
+        cards_split = self.game.player_list[self.current_player].cards_split
+        while s_0 < len(cards_split) and s_0 + x_0 < it:    ##################
+            x = cards_split[s_0]
             # print(it)
-            if not self.cards.in_split:
-                nazwa_pliku = x[1] + "_" + x[2] + "_g.png"
+            if not self.in_split:
+                nazwa_pliku = x[0] + "_" + x[2] + "_g.png"
             else:
-                nazwa_pliku = x[1] + "_" + x[2] + ".png"
+                nazwa_pliku = x[0] + "_" + x[2] + ".png"
             # print(nazwa_pliku)
             img = pygame.image.load(nazwa_pliku)
             window.blit(img, (170 + (s_0 * 80), 350))
@@ -202,11 +228,11 @@ class Interface_GUI():
         #print("")
         #pygame.time.wait(1000)
         y_0 = 0
-        while y_0 < len(self.cards.talia_krupiera) and s_0 + y_0 + x_0 <it:
-            y = self.cards.talia_krupiera[y_0]
-            nazwa_pliku = y[1] + "_" + y[2] + ".png"
+        while y_0 < len(self.game.dealer.cards) and s_0 + y_0 + x_0 <it:
+            y = self.game.dealer.cards[y_0]
+            nazwa_pliku = y[0] + "_" + y[2] + ".png"
             #print(nazwa_pliku)
-            if not self.cards.odslon and len(self.cards.talia_krupiera) == 2 and y_0 == 1:
+            if not self.odslon and len(self.game.dealer.cards) == 2 and y_0 == 1:
                 window.blit(pygame.image.load("tyl.png"), (425 + (y_0 * 80), 100))
             else:
                 window.blit(pygame.image.load(nazwa_pliku), (425 + (y_0 * 80), 100))
@@ -221,7 +247,7 @@ class Interface_GUI():
 
 
 
-        if y_0 == len(self.cards.talia_krupiera):
+        if y_0 == len(self.game.dealer.cards):
             self.can_click = True
             #print(y)
 

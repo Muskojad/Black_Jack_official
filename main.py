@@ -3,11 +3,15 @@ import pickle
 from menu_kon import Menu_kon
 from menu_GUI import Menu
 import copy
+import classes
+
 
 width_w = 1000
 height_w = 700
 
 green = (36, 143, 46)
+blue = (0,191,255)
+beige = (245,245,220)
 
 
 def main():
@@ -37,7 +41,7 @@ def main():
             if event.type == pygame.QUIT or event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 game_work = False
                 if in_game:
-                    load_list.append([copy.deepcopy(game[1].cards), it, in_menu, in_game, game[1].time_left, menu.num_decs, menu.hotseat, menu.bet])
+                    load_list.append([copy.deepcopy(game[1].game), it, in_menu, in_game, game[1].time_left, menu.num_decs, menu.hotseat, menu.bet])
                     pickle.dump(load_list, open("save", "wb"))
                 return 0
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -67,7 +71,7 @@ def main():
                         #it += 1
                         time_game = 0
                     if interface == "undo":
-                        game[1].cards = copy.deepcopy(load_list[-2][0])
+                        game[1].game = copy.deepcopy(load_list[-2][0])
                         game[1].time_left = load_list[-2][4]
                         game[1].load_it -= 1
                         it = load_list[-2][1]
@@ -77,9 +81,20 @@ def main():
                     if interface != "nothing_clicked" and interface != "undo":
                         print("append")
                         load_list.append(
-                            [copy.deepcopy(game[1].cards), it, in_menu, in_game, game[1].time_left, menu.num_decs, menu.hotseat,
+                            [copy.deepcopy(game[1].game), it, in_menu, in_game, game[1].time_left, menu.num_decs, menu.hotseat,
                              menu.bet])
+                        player = game[1].current_player
+                        player += 1
+                        #pygame.time.wait(1000)
+                        if player >= classes.NUM_PLAYERS:
+                            player = 0
+                        game[1].current_player = player
                         game[1].load_it += 1
+                        if game[1].game.run_round_loop():
+                            game[1].game.next_round()
+                        else:
+                            game[1].game.final_round()
+
 
 
 
@@ -93,8 +108,10 @@ def main():
                         time_game = 0
                         frap = True
                         print("GH")
-
-        window.fill(green)
+        if not in_game or game[1].current_player == 0:
+            window.fill(green)
+        elif game[1].current_player == 1:
+            window.fill(blue)
         if in_menu:
             menu.draw(window)
             # print("s")
@@ -103,13 +120,14 @@ def main():
             game[1].time_left -= time/1000
 
             game[1].draw(window)
-            length = len(game[1].cards.talia_gracza) + len(game[1].cards.talia_krupiera) + len(game[1].cards.talia_split)
+            length = len(game[1].game.player_list[0].cards) + len(game[1].game.dealer.cards)# + len(game[1].cards.talia_split)
             if time_game > 1000 and it < length:
                 it +=1
                 time_game = 0
                 if it == 4:
                     load_list.append(
-                        [copy.deepcopy(game[1].cards), it, in_menu, in_game, game[1].time_left, menu.num_decs, menu.hotseat,
+                        [copy.deepcopy(game[1].game),
+                         it, in_menu, in_game, game[1].time_left, menu.num_decs, menu.hotseat,
                          menu.bet])
                     game[1].load_it += 1
             game[1].update_cards(window, it)
@@ -118,13 +136,13 @@ def main():
             if game[1].time_left <= 0 and game[1].hotseat:
                 in_game = False
                 in_menu_kon = False
-                krupier = game[1].cards.krupier()
-                interface = ("end", Menu_kon(krupier[0], krupier[1], window))
+                krupier = game[1].cards.krupier()   ###################
+                interface = ("end", Menu_kon(krupier[0], krupier[1], window))#####################
                 time_game = 0
                 #it += 1
         # pygame.display.flip()
         elif not in_game and not in_menu_kon:
-            length = len(game[1].cards.talia_gracza) + len(game[1].cards.talia_krupiera) + len(game[1].cards.talia_split)
+            length = len(game[1].game.player_list[0].cards) + len(game[1].game.dealer.cards) #+ len(game[1].cards.talia_split)
             if time_game > 2000 and it <= length:
                 it += 1
                 time_game = 0
@@ -132,7 +150,6 @@ def main():
             game[1].cards.odslon = True
             #print(game[1].cards.odslon, "sssssssssssssss")
             game[1].update_cards(window, it)
-            print(game[1].cards.talia_krupiera)
             #pygame.time.wait(100)
             pygame.display.flip()
             #pygame.time.wait(5000)
