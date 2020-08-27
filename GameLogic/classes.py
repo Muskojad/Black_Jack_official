@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 
-from resources import DEFAULT_DECK_NA, DEFAULT_BET, DEFAULT_CARDS, DEFAULT_SCORE, DEFAULT_BUDGET, NUM_PLAYERS, NUM_DECKS, \
-    DEFAULT_DECK_LEN, BET_MIN, NA_DECK_LEN
+from GameLogic.resources import DEFAULT_DECK_NA, DEFAULT_BET, DEFAULT_CARDS, DEFAULT_SCORE, DEFAULT_BUDGET, NUM_PLAYERS, NUM_DECKS, \
+    DEFAULT_DECK_LEN, BET_MIN, NA_DECK_LEN, DEFAULT_FLAGS
 from random import sample
 from typing import NewType
 from typing import List, Tuple
@@ -130,13 +130,11 @@ class Game:
 
     def first_round(self) -> None:
         for player in self.player_list:
-            player.draw_hand()
-        self.dealer.draw_hand()
+            for deck in player.decks:
+                draw(deck.cards)
+
         self.subtract_bets_from_budgets()
         self.calculate_and_verify_scores()
-
-    # Postanowiłem przenieść wszytkie metody na poziom gry zamiast gracza - czystszy kod
-    # wieksza spójnośc a niewielka różnica
 
     def can_hit(self, player):
         raise NotImplementedError
@@ -149,16 +147,6 @@ class Game:
 
     def invalid_choice_display(self):
         raise NotImplementedError
-
-        # mam pomysł, żeby ta funkcja pozwalała na wypisywanie na ekran wiadomości
-        # jeśli gracz  bedzie próbował wykona niedozwolony ruch
-
-
-    # def player_action_loop(self) -> None:
-    #     for player in self.player_list:
-    #         print(player)
-    #         print_stat(player)
-    #         self.round_menu(player)
 
     def calculate_round_outcome(self) -> None:
         for player in self.pl_stood:
@@ -208,108 +196,105 @@ class Game:
         for player in self.player_list:
             player.budget -= player.bet
 
-    # def round_menu(self, player) -> None:
-    #     can_use = [0]
-    #     if player.can_hit():
-    #         col_code = col.GREEN
-    #         can_use.append(1)
-    #     else:
-    #         col_code = col.RED
-    #     print(col_code + "\t\t1) hit" + col.WHITE)
-    #     if player.can_double_down():
-    #         col_code = col.GREEN
-    #         can_use.append(2)
-    #     else:
-    #         col_code = col.RED
-    #     print(col_code + "\t\t2) double down" + col.WHITE)
-    #     if player.can_split():
-    #         col_code = col.GREEN
-    #         can_use.append(3)
-    #     else:
-    #         col_code = col.RED
-    #     print(col_code + "\t\t3) split" + col.WHITE)
-    #     if can_insure(dealer=self.dealer):
-    #         col_code = col.GREEN
-    #         can_use.append(4)
-    #     else:
-    #         col_code = col.RED
-    #     print(col_code + "\t\t4) insure" + col.WHITE)
-    #     print(col.GREEN + "\t\t0) stand\n" + col.WHITE)
-    #     run = True
-    #     override_pllist = []
-    #     while run:
-    #         c = input("I choose: ")
-    #         if c == "1" and 1 in can_use:
-    #             player.hit()
-    #             run = False
-    #             override_pllist.append(player)
-    #         elif c == "2" and 2 in can_use:  # TRZEBA BEDZIE TO POPRAWIC
-    #             player.double_down()
-    #             run = False
-    #             override_pllist.append(player)
-    #         elif c == "3" and 3 in can_use:
-    #             player.split()
-    #             run = False
-    #             override_pllist.append(player)
-    #         elif c == "4" and 4 in can_use:
-    #             player.insure()
-    #             run = False
-    #             override_pllist.append(player)
-    #         elif c == "0":
-    #             player.stand()
-    #             run = False
-    #             self.pl_stood.append(player)
-    #         else:
-    #             print("Invalid input, please try again.")
-    #     self.player_list = override_pllist
 
+class Entity(object):
 
-class Entity(object):  # KLASA MACIERZYSTA DLA KLAS PLAYER I DEALER
-
-    def __init__(self, cards=None, score=0):
-        self.cards = cards if cards is not None else []
+    def __init__(self, lcards=None, lflags=None, lbets=None, score=0):
+        self.decks = [Deck(cards, flags, bet) for cards, flags, bet in zip(lcards, lflags, lbets)] if lcards is not \
+        None and lflags is not None and lbets is not None else [Deck()]
         self.score = score
 
-    def draw(self):
-        self.cards.append(DECK.pop(0))
 
-    def draw_hand(self):
-        self.draw()
-        self.draw()
+def draw(cards):
+    cards.append(DECK.pop(0))
 
 
-def can_insure(dealer):
-    if dealer.cards[0][0] == "Ace":
-        return True
-    else:
-        return False
+def draw_hand(cards):
+    draw(cards)
+    draw(cards)
+
+
+def hit(deck):
+    draw(deck.cards)
+    deck.flags["hit"] = True
+
+
+def DD(deck):
+    draw(deck.cards)
+    draw(deck.cards)
+    deck.flags["DD"] = True
+
+
+def split(deck, cards):
+    ncards = [[card] for card in cards]
+    deck.flags["split"] = True
+    return ncards
+
+
+def insure(player, deck):
+
+
+
+class Deck:
+    def __init__(self, cards=None, flags=None, bet=None):
+        self.cards = cards if cards is not None else DEFAULT_CARDS
+        self.flags = flags if flags is not None else DEFAULT_FLAGS
+        self.bet = bet if bet is not None else DEFAULT_BET
+        self.insurance = 0 if not flags["insurance"] else self.bet * 0.5
+
+    def __str__(self):
+        report = "Deck.__str__() called\n"
+        report += f"Cards : {self.cards}\n"
+        report += f"Flags : {self.flags}\n"
+        report += f"Bet : {self.bet}\n"
+        return report
+
+    def can_hit(self):
+        return not self.flags["DD"]
+
+    def can_stand(self):
+        return not self.flags["stand"]
+
+    def can_DD(self):
+        return not self.flags["hit"]
+
+    def can_split(self):
+        if len(self.cards == 2):
+            _, card1, _ = self.cards[0]
+            _, card2, _ = self.cards[1]
+            return card1 == card2
+
+        else:
+            return False
+
+    def can_insure(self, dealer):
+        return dealer.decks[0][0][0] == "Ace"
 
 
 class Player(Entity):
 
-    def __init__(self, cards: list, score: int, bet: float, name: str, budget, cards_split):
-        super().__init__(cards=cards, score=score)
-        self.bet = bet
-        self.cards_split = cards_split
+    def __init__(self, lcards, lflags, lbets, score, name, budget):
+        super().__init__(lcards=lcards, lflags=lflags, lbets=lbets, score=score)
         self.name = name
         self.budget = budget
-        self.insurance = 0
-        self.do_split: bool = False  #
-        self.had_hit: bool = False  #
-        self.had_split: bool = False  # TE ZMIENNE PRZECHOWUJĄ INFORMACJE O RUCHACH GRACZA TZN
-        self.had_stood: bool = False  # JAKICH METOD UŻYŁ POTRZEBNE DO SPRAWDZANIA CZY NP GRACZ MOŻE
-        self.had_doubled: bool = False  # SPLITOWAĆ (MOŻLIWE TYLKO W "1" TURZE)
-        self.can_enter_new_round = True  # jeśli false gracz przegrywa
 
     def __str__(self):
-        report = "Player __str__ called"
-        report += f"\nPlayer data:\ncards: {self.cards}\n" \
-                  f"score: {self.score}\nbet: {self.bet}\nbudget: {self.budget}\nname: {self.name}\ncards_split: {self.cards_split}\n"
-
+        report = ""
+        for deck in self.decks:
+            report += "\t"
+            report += str(deck)
+            report += "\n"
+        report += f"Score : {self.score}"
+        report += f"Budget : {self.budget}"
+        report += f"Name : {self.name}"
         return report
 
-    # USTAWIA WARTOŚĆ ZAKŁADU    /    PATRZĄC Z PERSPEKTYWY CZASU TA FUNKCJA JEST DO WYWALENIA DO POLA BĘDZIE SIĘ
-    #                            /    ODWOŁYWAĆ BEZPOŚREDNIO PRZEZ PLAYER.BET = NOWA_WARTOŚĆ
+    def get_flags(self):
+        return [deck.flags for deck in self.decks]
+
+    def reset_flags(self):
+        for deck in self.decks:
+            deck.flags = DEFAULT_FLAGS
 
     def add_points(self):
         self.score, aces_to_assign_value, self.cards = score_without_aces(self.cards)
@@ -386,25 +371,6 @@ class Player(Entity):
 
     # METODY SPRAWDZAJĄCE:
 
-    def can_hit(self):
-        if not self.had_doubled and not self.had_stood:
-            return True
-        else:
-            return False
-
-    def can_split(self):
-        if len(self.cards) >= 2:
-            _, card1, _ = self.cards[0]
-            _, card2, _ = self.cards[1]
-
-            if card1 == card2 and not self.had_hit and not self.had_split and not self.had_stood:
-                return True
-        else:
-            return False
-
-    def can_double_down(self):
-        return not self.had_hit and not self.had_stood and not self.had_doubled
-
     def hit(self):
         if self.can_hit():
             self.draw()
@@ -423,9 +389,6 @@ class Player(Entity):
         else:
             print('You cannot double down')
 
-    def split(self):
-        self.cards_split.append(self.cards.pop())
-
     def insure(self):
         self.insurance = 0.5 * self.bet
         self.budget -= self.insurance
@@ -434,7 +397,7 @@ class Player(Entity):
 class Dealer(Entity):
 
     def __init__(self, cards: List[Cards] = None, score=None):
-        super().__init__(cards=cards, score=score)
+        super().__init__(lcards=cards, score=score)
 
     def add_points(self):
         self.score, aces_with_indexes, self.cards = score_without_aces(self.cards)
@@ -455,7 +418,7 @@ class Dealer(Entity):
         if self.score < 17:
             print("dealer draws!\n")
             time.sleep(3)
-            self.draw()
+            draw(self.decks[0])
             self.add_points()
             self.draw_until_17_or_higher()
         else:

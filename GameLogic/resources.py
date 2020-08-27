@@ -35,6 +35,8 @@ DEFAULT_DECK = [('Ace', 0, 'Diamond'), ('2', 2, 'Diamond'), ('3', 3, 'Diamond'),
                    ('8', 8, 'Heart'), ('9', 9, 'Heart'), ('10', 10, 'Heart'), ('Jack', 10, 'Heart'),
                    ('Queen', 10, 'Heart'), ("King", 10, 'Heart')]
 
+DEFAULT_FLAGS = {"hit": False, "DD": False, "split": False, "insurance": False, "stand": False}
+
 DEFAULT_DECK_LEN = 52
 NA_DECK_LEN = 48
 
