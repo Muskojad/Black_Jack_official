@@ -76,7 +76,7 @@ class Interface_GUI():
             self.basic_col = (192, 192, 192)
         hit_col = self.basic_col
         stand_col = self.basic_col
-        print(self.current_player)
+        #print(self.current_player)
         if self.game.player_list[self.current_player].can_double_down(): double_col = self.basic_col
         else: double_col = self.grey
         if self.game.player_list[self.current_player].can_split():
@@ -158,11 +158,11 @@ class Interface_GUI():
                 self.game.player_list[self.current_player].stand()
                 if self.game.player_list[self.current_player].cards_split: self.in_split = True
                 #else:
-                krupier = self.cards.krupier()
-                self.cards.odslon = True
+                #krupier = self.cards.krupier()
+                #self.cards.odslon = True
                 #self.update_cards(window) ####################
-                menu_kon = Menu_kon(krupier[0], krupier[1], window)
-                return ("end", menu_kon)
+                #menu_kon = Menu_kon(krupier[0], krupier[1], window)
+                return ("end", )#menu_kon)
             elif self.game.player_list[self.current_player].can_split() and self.click(self.button_split, pos[0], pos[1]):
                 print("Split")
                 self.game.player_list[self.current_player].split()
@@ -196,7 +196,7 @@ class Interface_GUI():
             else:nazwa_pliku = x[0] + "_" + x[2] + ".png"
             #nazwa_pliku = x[0] + "_" + x[2] + ".png"
             #print(nazwa_pliku)
-            if self.game.player_list[0].cards_split: x_start = 665
+            if self.game.player_list[self.current_player].cards_split: x_start = 665
             else: x_start = 425
             img = pygame.image.load(nazwa_pliku)
             window.blit(img, (x_start + (x_0 * 80), 350 ))
@@ -239,7 +239,7 @@ class Interface_GUI():
 
             if self.it_y == y_0:
                 #pygame.time.wait(1000)
-                print("xd")
+                #print("xd")
                 self.it_y += 1
             #pygame.display.update(0, 0, width_w, self.y/2)
             y_0 += 1

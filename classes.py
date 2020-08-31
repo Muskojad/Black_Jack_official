@@ -114,8 +114,10 @@ class Game:
 
     # Poziom rundy
 
-    def run_round_loop(self) -> None:
-        return len(self.pl_busted + self.pl_stood) - len(self.pl_split) != NUM_PLAYERS
+    def run_round_loop(self):
+        print("dsd")
+        return not(len(self.pl_busted + self.pl_stood) - len(self.pl_split) == NUM_PLAYERS)
+
 
     def final_round(self) -> None:
         print("All players either lost or chose to stand!\n")
