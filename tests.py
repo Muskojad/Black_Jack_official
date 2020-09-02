@@ -5,21 +5,11 @@
 #   W TYM PLIKU TESTUJE KOD
 #
 
-had_hit = False
-had_stood = False
-had_doubled = False
+a = [[1,2]]
+
+a = [elem if type(elem) != tuple else unpack_list(list_gen(elem)) for elem in a]
+for index, elem in enumerate(a):
 
 
-def can_double_down1():
-    if not had_hit and not had_stood and not had_doubled:
-        return True
-    else:
-        return False
 
-
-def can_double_down2():
-    return not had_hit and not had_stood and not had_doubled
-
-
-print(can_double_down1())
-print(can_double_down2())
+print(a)
