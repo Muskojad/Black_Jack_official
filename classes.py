@@ -183,12 +183,12 @@ class Game:
                 for hand in player.hands_stand:
                     hand.win()
         else:
-            for player in self.pllst:
-                index = 1
+            for index, player in enumerate(self.pllst):
                 for hand in player.hands_stand:
-                    print(f"{player.name} has {len(player.hands_stand + player.hands_busted)} hand(s), "
-                          f"{len(player.hands_busted)} of which are busted.")
-                    outcome = f"{player.name} - Hand {index} - "
+                    index += 1
+                    print(col.RED + f"{player.name}" + col.WHITE + " :")
+                    print(f"    budget : {player.budget}")
+                    outcome = col.MAGENTA + f"    hand {index + 1} " + col.WHITE + f":\n      score : {hand.score}\n      bet : {hand.bet}\n      cards : {hand.cards}\n"
                     difference = abs(self.dealer.hand.score - 21) - abs(hand.score - 21)
                     if difference > 0:
                         pot = hand.win()
@@ -201,14 +201,14 @@ class Game:
                         pot = hand.draw()
                         player.budget += pot
                         outcome += f"draw - original bet returned ({pot} = {hand.bet})"
-                    else:
+                    if difference < 0:
                         pot = hand.loss(self.dealer)
                         player.budget += pot
                         if pot == 0:
                             outcome += "loss"
                         else:
                             outcome += "loss - bet returned thanks to insurance"
-                    print(outcome if not outcome else "outcome jest puste")
+                    print(outcome)
 
     def CENR(self):
         npllst = []
@@ -353,8 +353,11 @@ class Player:
     def choice(self, dealer):
         for index, hand in enumerate(self.hands_nt):
             run = True
-            print(f"1) hit 2) stand  3) split  4) DD 5) insure\n| " + col.RED + f"{self.name},"
-                                    + col.MAGENTA + f" hand {index + 1}" + col.WHITE + f" score and carts: {hand.score} : {hand.cards} : ")
+            print(col.RED + f"{self.name}" + col.WHITE)
+            print(f"    budget : {self.budget}" + col.MAGENTA)
+            print(f"    hand {index + 1} " + col.WHITE + f":\n       score : {hand.score}\n"
+                                                        f"       bet : {hand.bet}\n"
+                                                        f"       cards : {hand.cards}")
             while run:
                 choice = input()
                 if choice == "1":
@@ -362,46 +365,46 @@ class Player:
                         self.hit(hand)
                         run = False
                     else:
-                        print(f"Hand {self.hands_nt.index(hand) + 1} of {self.name} can't hit\n")
+                        print(f"Hand {index + 1} can't hit.")
                 elif choice == "2":
                     if hand.can_stand():
                         self.stand(hand)
                         run = False
                     else:
-                        print(f"Hand {self.hands_nt.index(hand) + 1} of {self.name} can't stand\n")
+                        print(f"Hand {index + 1} can't stand.")
                 elif choice == "3":
                     if hand.can_split():
                         self.split(hand)
                         run = False
                     else:
-                        print(f"Hand {self.hands_nt.index(hand) + 1} of {self.name} can't split\n")
+                        print(f"Hand {index + 1} can't split.")
                 elif choice == "4":
                     if hand.can_DD():
                         self.DD(hand)
                         run = False
                     else:
-                        print(f"Hand {self.hands_nt.index(hand) + 1} of {self.name} can't DD\n")
+                        print(f"Hand {index + 1} can't DD.")
                 elif choice == "5":
                     if hand.can_insure(dealer):
                         self.insure(hand)
                         run = False
                     else:
-                        print(f"Hand {self.hands_nt.index(hand)} of {self.name} can't ins\n")
+                        print(f"Hand {index} can't ins.")
                 else:
-                    print("Invalid input please tye again")
+                    print("Invalid input please try again.")
 
     def choice_result(self):
         message = ""
         blo = 1
         for index, hand in enumerate(self.hands_stand+self.hands_busted+self.hands_nt):
             check_sum = len([value for value in hand.flags.values() if value])
-            if hand.flags["hit"]:
-                message += col.RED + f"{self.name}," + col.MAGENTA + f" hand {index + 1}" + col.WHITE + \
-                              f" chose to hit -  {hand.score}  : {hand.cards[:-1]} + {hand.cards[-1]}\n"
-                message += col.RED + " - unfortunately he busted" + col.WHITE if hand.score > 21 else ""
             if hand.flags["stand"] and not hand.flags["DD"]:
                 message += col.RED + f"{self.name}," + col.MAGENTA + f" hand {index + 1}" + col.WHITE + \
                               f" chose to stand -  {hand.score}  : {hand.cards}\n"
+            if hand.flags["hit"] and not hand.flags["stand"]:
+                message += col.RED + f"{self.name}," + col.MAGENTA + f" hand {index + 1}" + col.WHITE + \
+                              f" chose to hit -  {hand.score}  : {hand.cards[:-1]} + {hand.cards[-1]}\n"
+                message += col.RED + " - unfortunately he busted" + col.WHITE if hand.score > 21 else ""
             if hand.flags["split"] and check_sum == 1:
                 if blo % 2:
                     index_split = index + 1
@@ -416,7 +419,7 @@ class Player:
                 message += col.RED + f"{self.name}," + col.MAGENTA + f" hand {index + 1}" + col.WHITE + \
                               f" chose to double down -  {hand.score}  : {hand.cards[:-1]} + {hand.cards[-1]}\n"
                 message += col.RED + " - unfortunately he busted" + col.WHITE if hand.score > 21 else ""
-            if hand.flags["insurance"]:
+            if hand.flags["insurance"] and check_sum < 2:
                 message += col.RED + f"{self.name}," + col.MAGENTA + f" hand {index + 1}" + col.WHITE + \
                               f" chose to insure -  {hand.score}  : {hand.cards}\n"
         print(message)
@@ -436,7 +439,6 @@ class Player:
                 nowa_lista.append(elem)
         self.hands_nt = nowa_lista
 
-
     def lists_override(self):
         self.hands_nt = [hand for hand in self.hands_nt if hand not in self.hands_stand + self.hands_busted]
 
@@ -445,7 +447,7 @@ class Player:
 
     def reset_flags(self):
         for hand in self.hands_nt:
-            hand.flags = DEFAULT_FLAGS
+            hand.flags = deepcopy(DEFAULT_FLAGS)
 
     def calculate_scores(self):
         for hand in self.hands_nt:
