@@ -4,7 +4,7 @@
 
 from resources import DEFAULT_DECK_NA, DEFAULT_BET, DEFAULT_CARDS, DEFAULT_SCORE, DEFAULT_BUDGET, \
     DEFAULT_DECK_LEN, BET_MIN, NA_DECK_LEN, DEFAULT_FLAGS, NUM_DECKS, NUM_PLAYERS
-from random import shuffle
+from random import shuffle, choice
 from typing import NewType
 from typing import List, Tuple, Dict
 from copy import deepcopy, copy
@@ -59,15 +59,19 @@ Cards = NewType("Cards", List[Card])
 def game_loop():
     game = Game()
     game.first_round()
-    game.first_turn()
+    game.begin_first_turn()
+    game.end_first_turn()
     while game.run_next_turn():
-        game.next_turn()
+        game.begin_next_turn()
+        game.end_next_turn()
     game.final_turn()
     while game.run_next_round():
         game.next_round()
-        game.first_turn()
+        game.begin_first_turn()
+        game.end_first_turn()
         while game.run_next_turn():
-            game.next_turn()
+            game.begin_next_turn()
+            game.end_next_turn()
         game.final_turn()
     game.final_round()
 
@@ -84,6 +88,7 @@ class Game:
         self.__lnames = lnames if lnames is not None else deepcopy(create_player_names(self.__llindexes[0]))
         self.__lbudgets = lbudgets if lbudgets is not None else deepcopy(NUM_PLAYERS * [DEFAULT_BUDGET])
         self.deck = deepcopy(create_deck())
+        self.cut_reached = False
         self.plbrkn = []
         self.pllst = create_players(self.__llcards, self.__llflags, self.__llbets,
                                     self.__llscores, self.__llindexes, self.__lnames, self.__lbudgets)
@@ -96,7 +101,16 @@ class Game:
             report += str(player)
         return report
 
-    def first_turn(self) -> None:
+    def insert_cut(self):
+        lenght = len(self.deck)
+        begin = int(lenght * 0.25)
+        end = int(lenght * 0.8)
+        index = choice(range(begin, end))
+        replacement = self.deck[begin:end]
+        replacement.insert(index, "CUT")
+        self.deck = self.deck[:begin] + replacement + self.deck[end:]
+
+    def begin_first_turn(self) -> None:         # Ta funckja powinna konczyć się wyborem ruchu dla każdej ręki każdego gracza
         clear()
         self.draw_hand(self.dealer.hand.cards)
         for player in self.pllst:
@@ -104,18 +118,24 @@ class Game:
                 self.draw_hand(hand.cards)
             player.calculate_scores()
             self.show_dealers_card()
-            player.choice(self.dealer, self.draw)
-            player.choice_processing_functions()
+            player.choice(self.dealer, self.draw)  # Ta funkcje pobiera jaki ruch ma byc wykonany
             input("Press 'enter' to select next player.")
 
-    def next_turn(self) -> None:
+    def end_first_turn(self):                   # Ta funkcja powinna zostać wywołana po dokonaniu wyboru przez kazdego gracza
+        for player in self.pllst:
+            player.choice_processing_functions()            # ale przed rozpoczeciem begin_nexr_turn()
+
+    def begin_next_turn(self) -> None:
         clear()
         for player in self.pllst:
             if player.hands_nt:
                 self.show_dealers_card()
                 player.choice(self.dealer, self.draw)
-                player.choice_processing_functions()
                 input("Press 'enter' to select next player.")
+
+    def end_next_turn(self):
+        for player in self.pllst:
+            player.choice_processing_functions()
 
     def run_next_turn(self) -> bool:
         run = 0
@@ -132,9 +152,13 @@ class Game:
 
     def first_round(self) -> None:
         self.subtract_bets_from_budgets()
+        self.insert_cut()
 
     def next_round(self) -> None:
-        self.deck = deepcopy(create_deck())
+        if self.cut_reached:
+            print("Cut has been reached - deck is being shuffled")
+            self.deck = create_deck()
+            self.insert_cut()
         for player in self.pllst:
             player.reset_player()
         self.dealer.reset_dealer()
@@ -144,7 +168,7 @@ class Game:
         return bool(len(self.pllst))
 
     def final_round(self):
-        outcome = "Game over!\nHere are the game results:"
+        outcome = "Game over!\nAll players are out of money:"
         scores = [(player.name, player.budget) for player in self.pllst + self.plbrkn]
 
         def sort(elem):
@@ -157,12 +181,16 @@ class Game:
         print(outcome)
 
     def draw(self, cards):
-        cards.append(self.deck.pop(0))
+        card = self.deck.pop(0)
+        if type(card) == str:
+            self.cut_reached = True
+            cards.append(self.deck.pop(0))
+        else:
+            cards.append(card)
 
     def draw_hand(self, cards):
         self.draw(cards)
         self.draw(cards)
-
 
     def show_dealers_card(self):
         print(f"Dealer's card : {self.dealer.hand.cards[0]}") if self.run_next_turn() else print(
@@ -348,15 +376,18 @@ class Player:
 
     def DD(self, hand, draw):
         if self.can_afford_new_bet(hand):
+            self.budget -= hand.bet
             draw(hand.cards)
+            self.calculate_scores()
             hand.bet *= 2
             hand.flags["DD"] = True
-            self.stand(hand)
+            if hand.score <= 21:
+                self.hands_stand.append(hand)
         else:
             print(f"Gracza {self.name} nie stac na Double Down")
 
     def split(self, hand):
-        index = hand.index
+        index = self.hands_nt.index(hand)
         hand.flags["split"] = True
         self.hands_nt = [elem for elem in self.hands_nt if elem != hand]
         self.budget -= hand.bet
@@ -380,7 +411,6 @@ class Player:
         return self.budget >= BET_MIN
 
     def choice(self, dealer, draw):
-        clear()
         for hand in self.hands_nt:
             run = True
             print(col.red(f"{self.name}") + " : ")
@@ -422,37 +452,6 @@ class Player:
                         print(f"This hand can't use insurance.")
                 else:
                     print("Invalid input please try again.")
-
-    # def choice_result(self):
-    #     message = ""
-    #     blo = 1
-    #     for hand in self.hands_stand+self.hands_busted+self.hands_nt:
-    #         check_sum = len([value for value in hand.flags.values() if value])
-    #         if hand.flags["stand"] and not hand.flags["DD"]:
-    #             message += col.red(f"{self.name}") + f" hand {hand.index}"
-    #                           f" chose to stand -  {hand.score}  : {hand.cards}\n"
-    #         if hand.flags["hit"] and not hand.flags["stand"]:
-    #             message += col.RED + f"{self.name}," + col.MAGENTA + f" hand {index + 1}" + col.WHITE + \
-    #                           f" chose to hit -  {hand.score}  : {hand.cards[:-1]} + {hand.cards[-1]}\n"
-    #             message += col.RED + " - unfortunately he busted" + col.WHITE if hand.score > 21 else ""
-    #         if hand.flags["split"] and check_sum == 1:
-    #             if blo % 2:
-    #                 index_split = index + 1
-    #                 message += col.RED + f"{self.name}," + col.MAGENTA + f" hand {index + 1}" + col.WHITE + \
-    #                   f" chose to split his hand {index_split}\n" if not blo % 2 else ""
-    #                 message += f"hand {index + 1} -  {hand.score}  : {hand.cards}\n"
-    #                 blo += 1
-    #             else:
-    #                 message += f"hand {index + 1} -  {hand.score}  : {hand.cards}\n"
-    #                 blo += 1
-    #         if hand.flags["DD"]:
-    #             message += col.RED + f"{self.name}," + col.MAGENTA + f" hand {index + 1}" + col.WHITE + \
-    #                           f" chose to double down -  {hand.score}  : {hand.cards[:-1]} + {hand.cards[-1]}\n"
-    #             message += col.RED + " - unfortunately he busted" + col.WHITE if hand.score > 21 else ""
-    #         if hand.flags["insurance"] and check_sum < 2:
-    #             message += col.RED + f"{self.name}," + col.MAGENTA + f" hand {index + 1}" + col.WHITE + \
-    #                           f" chose to insure -  {hand.score}  : {hand.cards}\n"
-    #     print(message)
 
     def choice_processing_functions(self):
             self.check_for_split()
