@@ -19,16 +19,17 @@
 #                          ('4', 4, 'Heart'), ('5', 5, 'Heart'), ('6', 6, 'Heart'), ('7', 7, 'Heart'),
 #                          ('8', 8, 'Heart'), ('9', 9, 'Heart'), ('10', 10, 'Heart'), ('Jack', 10, 'Heart'),
 #                          ('Queen', 10, 'Heart'), ("King", 10, 'Heart')]
-DEFAULT_DECK_NA = [('3', 3, 'Heart'), ('3', 3, 'Heart'), ('7', 7, 'Spade'),  #('Ace', 0, 'Spade'),
-                   ('3', 3, 'Heart'), ('3', 3, 'Heart'),  #('Ace', 0, 'Spade'),
+
+DEFAULT_DECK_NA = [('3', 3, 'Heart'), ('3', 3, 'Heart'), ('7', 7, 'Spade'),  ('Ace', 0, 'Spade'),('Ace', 0, 'Spade'),('Ace', 0, 'Spade'),('Ace', 0, 'Spade'),('Ace', 0, 'Spade'),('Ace', 0, 'Spade'),
+                   ('3', 3, 'Heart'), ('3', 3, 'Heart'),  ('Ace', 0, 'Spade'),
                    ('3', 3, 'Heart'), ('5', 5, 'Diamond'), ('7', 7, 'Spade'),
-                   ('3', 3, 'Heart'), ('3', 3, 'Heart'), ('7', 7, 'Spade'),  # ('Ace', 0, 'Spade'),
-                   ('3', 3, 'Heart'), ('3', 3, 'Heart'),  # ('Ace', 0, 'Spade'),
+                   ('3', 3, 'Heart'), ('3', 3, 'Heart'), ('7', 7, 'Spade'),   ('Ace', 0, 'Spade'),
+                   ('3', 3, 'Heart'), ('3', 3, 'Heart'),   ('Ace', 0, 'Spade'),
                    ('3', 3, 'Heart'), ('5', 5, 'Diamond'), ('7', 7, 'Spade'),
-                   ('3', 3, 'Heart'), ('3', 3, 'Heart'), ('7', 7, 'Spade'),  # ('Ace', 0, 'Spade'),
-                   ('3', 3, 'Heart'), ('3', 3, 'Heart'),  # ('Ace', 0, 'Spade'),
+                   ('3', 3, 'Heart'), ('3', 3, 'Heart'), ('7', 7, 'Spade'),   ('Ace', 0, 'Spade'),
+                   ('3', 3, 'Heart'), ('3', 3, 'Heart'),   ('Ace', 0, 'Spade'),
                    ('3', 3, 'Heart'), ('5', 5, 'Diamond'), ('7', 7, 'Spade'),
-                   #('Ace', 0, 'Spade'),
+                   ('Ace', 0, 'Spade'),
                    ]
 
 
@@ -59,7 +60,7 @@ DEFAULT_FLAGS = [{
 }]
 
 DEFAULT_DECK_LEN = 52
-NA_DECK_LEN = 24
+NA_DECK_LEN = 30
 #48
 
 DEFAULT_BET = [10]

@@ -177,6 +177,9 @@ class Interface_GUI():
             elif self.game.pllst[self.current_player].hands_nt[0].can_DD() and self.click(self.button_double, pos[0], pos[1]):
                 print("Double")
                 self.game.pllst[self.current_player].DD(self.game.pllst[self.current_player].hands_nt[0],  self.game.draw)
+            elif self.game.pllst[self.current_player].hands_nt[0].can_insure(self.game.dealer) and self.click(self.button_insure, pos[0], pos[1]):
+                print("insure")
+                self.game.pllst[self.current_player].insure(self.game.pllst[self.current_player].hands_nt[0])
             else:
                 return "nothing_clicked"
         else:

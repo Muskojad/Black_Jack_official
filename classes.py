@@ -4,7 +4,7 @@ NUM_DECKS = 2
 NUM_PLAYERS =2
 DEFAULT_BET = [10]
 
-from resources import DEFAULT_DECK_NA, DEFAULT_CARDS, DEFAULT_BET, DEFAULT_SCORE, DEFAULT_BUDGET, \
+from resources import DEFAULT_DECK_NA, DEFAULT_CARDS, DEFAULT_SCORE, DEFAULT_BUDGET, \
     DEFAULT_DECK_LEN, BET_MIN, NA_DECK_LEN, DEFAULT_FLAGS
 from random import shuffle, choice
 from typing import NewType
@@ -403,7 +403,7 @@ class Player:
 
     def DD(self, hand, draw):
         if self.can_afford_new_bet(hand):
-            self.budget -= hand.bet
+            self.budget[0] -= hand.bet
             draw(hand)
             self.calculate_scores()
             hand.bet *= 2
@@ -417,23 +417,23 @@ class Player:
         index = self.hands_nt.index(hand)
         hand.flags["split"] = True
         self.hands_nt = [elem for elem in self.hands_nt if elem != hand]
-        self.budget -= hand.bet
+        self.budget[0] -= hand.bet
         hand1, hand2 = Hand(deepcopy([hand.cards[0]]), deepcopy(hand.flags), copy(hand.bet)),\
                        Hand(deepcopy([hand.cards[1]]), deepcopy(hand.flags), copy(hand.bet))
         self.hands_nt.insert(index, (hand1, hand2))
 
     def insure(self, hand):
         if self.can_afford_insurance(hand):
-            self.budget -= hand.bet * 0.5
+            self.budget[0] -= hand.bet * 0.5
             hand.flags["insurance"] = True
         else:
             print(f"Gracza {self.name} nie stac na isurance")
 
     def can_afford_insurance(self, hand):
-        return hand.bet * 0.5 <= self.budget
+        return hand.bet * 0.5 <= self.budget[0]
 
     def can_afford_new_bet(self, hand):
-        return hand.bet <= self.budget
+        return hand.bet <= self.budget[0]
 
     def can_afford_new_round(self):
         return self.budget >= BET_MIN

@@ -4,6 +4,7 @@ import os
 import pickle
 import classes
 from stats import Stats
+from copy import deepcopy
 
 
 width_w = 1000
@@ -154,7 +155,7 @@ class Menu(object):
         if self.click(self.button_start, pos[0], pos[1]):
             classes.NUM_PLAYERS = self.players
             classes.NUM_DECKS = self.num_decs
-            classes.DEFAULT_BET = [self.bet]
+            classes.DEFAULT_BET = deepcopy([self.bet])
             interface_GUI = Interface_GUI(self.num_decs, self.hotseat, window, self.time, self.bet)
             #game.start_game()
             print("start game")

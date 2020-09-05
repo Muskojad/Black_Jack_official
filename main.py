@@ -102,7 +102,7 @@ def main():
                             game[1].game.final_turn()
                             lista_kon =[]
                             for player in game[1].game.pllst:
-                                lista_kon.append(player.budget[0])
+                                lista_kon.append(200 - player.budget[0])###popraw
                             menu_kon = Menu_kon(lista_kon, window)
                             in_game = False
                             in_menu_kon = False
