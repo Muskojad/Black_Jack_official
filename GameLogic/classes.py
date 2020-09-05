@@ -164,7 +164,7 @@ class Game:
     def calculate_and_verify_scores(self) -> None:
         override_pllist = []
         for index, player in enumerate(self.player_list):
-            player.add_points()
+            player.calculate_score()
             if player.score > 21:
                 print(col.RED + f"{player.name} has busted! (score > 21)" + col.WHITE)
                 self.pl_busted.append(player)
