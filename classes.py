@@ -59,19 +59,19 @@ Cards = NewType("Cards", List[Card])
 def game_loop():
     game = Game()
     game.first_round()
-    game.begin_first_turn()
-    game.end_first_turn()
+    game.first_turn()
+    game.process_player_choices()
     while game.run_next_turn():
-        game.begin_next_turn()
-        game.end_next_turn()
+        game.next_turn()
+        game.process_player_choices()
     game.final_turn()
     while game.run_next_round():
         game.next_round()
-        game.begin_first_turn()
-        game.end_first_turn()
+        game.first_turn()
+        game.process_player_choices()
         while game.run_next_turn():
-            game.begin_next_turn()
-            game.end_next_turn()
+            game.next_turn()
+            game.process_player_choices()
         game.final_turn()
     game.final_round()
 
@@ -110,7 +110,7 @@ class Game:
         replacement.insert(index, "CUT")
         self.deck = self.deck[:begin] + replacement + self.deck[end:]
 
-    def begin_first_turn(self) -> None:         # Ta funckja powinna konczyć się wyborem ruchu dla każdej ręki każdego gracza
+    def first_turn(self) -> None:         # Ta funckja powinna konczyć się wyborem ruchu dla każdej ręki każdego gracza
         clear()
         self.draw_hand(self.dealer.hand)
         for player in self.pllst:
@@ -118,24 +118,16 @@ class Game:
                 self.draw_hand(hand)
             player.calculate_scores()
             self.show_dealers_card()
-            player.choice(self.dealer, self.draw)  # Ta funkcje pobiera jaki ruch ma byc wykonany
+            player.choice(self.dealer, self.draw)
             input("Press 'enter' to select next player.")
 
-    def end_first_turn(self):                   # Ta funkcja powinna zostać wywołana po dokonaniu wyboru przez kazdego gracza
-        for player in self.pllst:
-            player.choice_processing_functions()            # ale przed rozpoczeciem begin_nexr_turn()
-
-    def begin_next_turn(self) -> None:
+    def next_turn(self) -> None:
         clear()
         for player in self.pllst:
             if player.hands_nt:
                 self.show_dealers_card()
                 player.choice(self.dealer, self.draw)
                 input("Press 'enter' to select next player.")
-
-    def end_next_turn(self):
-        for player in self.pllst:
-            player.choice_processing_functions()
 
     def run_next_turn(self) -> bool:
         run = 0
@@ -182,6 +174,10 @@ class Game:
             name1, wynik = scores
             outcome += f'{index + 1}. {name1} finished the game with {wynik}$\n'
         print(outcome)
+
+    def process_player_choices(self):
+        for player in self.pllst:
+            player.choice_processing_functions()
 
     def draw(self, hand):
         card = self.deck.pop(0)
@@ -443,9 +439,11 @@ class Player:
             run = True
             print(col.red(f"{self.name}") + " : ")
             print(f"    budget : {self.budget}")
-            print(col.magenta(f"    hand {hand.index} ") + f":\n       score : {hand.score}\n"
-                                                        f"       bet : {hand.bet}\n"
-                                                        f"       cards : {hand.cards}")
+            mess = col.magenta(f"    hand {hand.index} ") + f":\n       score : {hand.score}"
+            mess += f"{len(self.aces)}x Ace" if self.aces else ""
+            print(mess)
+            print(f"       bet : {hand.bet}")
+            print(f"       cards : {hand.cards}")
             while run:
                 choice = input()
                 if choice == "hit":
