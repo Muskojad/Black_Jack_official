@@ -1,9 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+NUM_DECKS = 2
+NUM_PLAYERS =2
+DEFAULT_BET = [10]
 
-
-from resources import DEFAULT_BET, DEFAULT_CARDS, DEFAULT_SCORE, DEFAULT_BUDGET, \
-    BET_MIN, DEFAULT_FLAGS, NUM_DECKS, NUM_PLAYERS, DEFAULT_DECK, DEFAULT_TESTS
+from resources import DEFAULT_DECK_NA, DEFAULT_CARDS, DEFAULT_BET, DEFAULT_SCORE, DEFAULT_BUDGET, \
+    DEFAULT_DECK_LEN, BET_MIN, NA_DECK_LEN, DEFAULT_FLAGS
 from random import shuffle, choice
 from typing import NewType
 from typing import List, Tuple
@@ -42,7 +44,7 @@ def create_player_names(lindexes):
 
 
 def create_deck():
-    deck = NUM_DECKS * DEFAULT_DECK
+    deck = NUM_DECKS * DEFAULT_DECK_NA
     shuffle(deck)
     return deck
 
@@ -56,24 +58,24 @@ Card = NewType("Card", Tuple[str, int, str])
 Cards = NewType("Cards", List[Card])
 
 
-def game_loop():
-    game = Game()
-    game.first_round()
-    game.first_turn()
-    game.process_player_choices()
-    while game.run_next_turn():
-        game.next_turn()
-        game.process_player_choices()
-    game.final_turn()
-    while game.run_next_round():
-        game.next_round()
-        game.first_turn()
-        game.process_player_choices()
-        while game.run_next_turn():
-            game.next_turn()
-            game.process_player_choices()
-        game.final_turn()
-    game.final_round()
+# def game_loop():
+#     game = Game()
+#     game.first_round()
+#     game.first_turn()
+#     game.process_player_choices()
+#     while game.run_next_turn():
+#         game.next_turn()
+#         game.process_player_choices()
+#     game.final_turn()
+#     while game.run_next_round():
+#         game.next_round()
+#         game.first_turn()
+#         game.process_player_choices()
+#         while game.run_next_turn():
+#             game.next_turn()
+#             game.process_player_choices()
+#         game.final_turn()
+#     game.final_round()
 
 
 class Game:
@@ -118,16 +120,18 @@ class Game:
                 self.draw_hand(hand)
             player.calculate_scores()
             self.show_dealers_card()
-            player.choice(self.dealer, self.draw)
-            input("Press 'enter' to select next player.")
+            #player.choice(self.dealer, self.draw)
+            player.choice_processing_functions()
+            #input("Press 'enter' to select next player.")
 
     def next_turn(self) -> None:
         clear()
         for player in self.pllst:
             if player.hands_nt:
                 self.show_dealers_card()
-                player.choice(self.dealer, self.draw)
-                input("Press 'enter' to select next player.")
+                #player.choice(self.dealer, self.draw)
+                player.choice_processing_functions()
+                #input("Press 'enter' to select next player.")
 
     def run_next_turn(self) -> bool:
         run = 0
@@ -143,7 +147,7 @@ class Game:
         self.dealer.draw_until_17_or_higher(self.draw)
         self.determine_round_outcome()
         self.CENR()
-        input("Press 'enter' to continue...")
+        #input("Press 'enter' to continue...")
 
     def first_round(self) -> None:
         self.subtract_bets_from_budgets()
@@ -212,7 +216,7 @@ class Game:
 
                 for hand in player.hands_stand:
                     pot = hand.win()
-                    player.budget += pot
+                    player.budget[0] += pot
                     print(col.magenta(f"    Hand {hand.index}") + f" : {hand.score}" + col.green(" << ") + f"{d_score}"
                           + col.green(f" - won {pot}$\n"))
                 print(f"    Current budget : {player.budget}$\n")
@@ -231,28 +235,28 @@ class Game:
 
                 for hand in hands_blckjck:
                     pot = hand.win()
-                    player.budget += pot
+                    player.budget[0] += pot
                     outcome = col.magenta(f"    hand {hand.index}") + f" : {hand.score}" + col.green(" > ") + f"{d_score} - "
                     outcome += col.cyan(f"Black Jack! pot {pot}$ = {hand.bet}$ * 2,5")
                     print(outcome)
 
                 for hand in hands_win:
                     pot = hand.win()
-                    player.budget += pot
+                    player.budget[0] += pot
                     outcome = col.magenta(f"    hand {hand.index}") + f" : {hand.score}" + col.green(" > ") + f"{d_score} - "
                     outcome += col.green(f'wins {pot}$')
                     print(outcome)
 
                 for hand in hands_draw:
                     pot = hand.draw()
-                    player.budget += pot
+                    player.budget[0] += pot
                     outcome = col.magenta(f"    hand {hand.index}") + f" : {hand.score} = {d_score} - " \
                                                                       f"draws bet returned ({hand.bet}$)"
                     print(outcome)
 
                 for hand in hands_loss:
                     pot = hand.loss(self.dealer)
-                    player.budget += pot
+                    player.budget[0] += pot
                     outcome = col.magenta(f"    hand {hand.index}") + f" : {hand.score}" + col.red(" < ") + f"{d_score} - "
                     if pot == 0:
                         outcome += col.red(f"loses")
@@ -278,7 +282,7 @@ class Game:
     def subtract_bets_from_budgets(self) -> None:  # OBLICZA BUDŻET PO ODJĘCIU ZAKŁĄDU (PRZY WEJŚCIU DO NOWEJ RUNDY)
         for player in self.pllst:
             for hand in player.hands_nt:
-                player.budget -= hand.bet
+                player.budget[0] -= hand.bet
 
 
 class HandDealer:
@@ -567,12 +571,6 @@ class Dealer:
             draw(self.hand)
             print(f"Dealer draws {self.hand.cards[-1]}")
             self.calculate_score()
-            time.sleep(2)
+            #time.sleep(2)
         else:
             print(f"Dealer's final cards and score : {self.hand.cards} : {self.hand.score}")
-
-
-def main():
-    game_loop()
-
-main()

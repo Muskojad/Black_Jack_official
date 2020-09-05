@@ -5,13 +5,21 @@
 #   W TYM PLIKU TESTUJE KOD
 #
 
-from classes import Game
+had_hit = False
+had_stood = False
+had_doubled = False
 
 
-def main():
-    game = Game()
-    print(game.deck)
-    game.insert_cut()
-    print(game.deck)
+def can_double_down1():
+    if not had_hit and not had_stood and not had_doubled:
+        return True
+    else:
+        return False
 
-main()
+
+def can_double_down2():
+    return not had_hit and not had_stood and not had_doubled
+
+
+print(can_double_down1())
+print(can_double_down2())

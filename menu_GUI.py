@@ -3,6 +3,7 @@ from Interface_GUI import Interface_GUI
 import os
 import pickle
 import classes
+from stats import Stats
 
 
 width_w = 1000
@@ -67,7 +68,11 @@ class Menu(object):
         self.button_hotseat_off = pygame.Rect(self.up_down_x, self.y_hotseat, self.up_down * 2, self.up_down * 2)
         self.button_hotseat_up = pygame.Rect(self.up_down_x, self.y_hotseat, self.up_down * 2, self.up_down)
         self.button_hotseat_down = pygame.Rect(self.up_down_x, self.y_hotseat + self.up_down, self.up_down * 2, self.up_down)
-        self.button_players = pygame.Rect(self.center_x, self.y_players, self.width_rect, self.height_rect)
+
+        self.button_players = pygame.Rect(self.center_x, self.y_players, self.width_rect - self.up_down * 2, self.height_rect)
+        self.button_players_up = pygame.Rect(self.up_down_x, self.y_players, self.up_down * 2, self.up_down)
+        self.button_players_down = pygame.Rect(self.up_down_x, self.y_players + self.up_down, self.up_down * 2,
+                                               self.up_down)
         self.button_stats = pygame.Rect(self.center_x, self.y_stats, self.width_rect, self.height_rect)
 
         #self.button_resume = pygame.Rect(self.center_x, self.y_start - 100, self.width_rect, self.height_rect)
@@ -89,21 +94,22 @@ class Menu(object):
         pygame.draw.rect(window, self.down_col, self.button_deck_down)
         pygame.draw.rect(window, self.basic_col, self.button_hotseat)
         pygame.draw.rect(window, self.basic_col, self.button_players)
+        pygame.draw.rect(window, self.up_col, self.button_players_up)
+        pygame.draw.rect(window, self.down_col, self.button_players_down)
         pygame.draw.rect(window, self.basic_col, self.button_stats)
-        # if self.paused:
-        #     pygame.draw.rect(window, self.basic_col, self.button_resume)
-        #     text_resume = self.font.render('Resume', True, self.font_color)
-        #     window.blit(text_resume, self.center_text(text_resume, self.button_resume))
 
         text_start = self.font.render('Start', True, self.font_color)
         text_bet = self.font.render("Bet " + str(self.bet) +"$", True, self.font_color)
         text_bet_up = self.font_arrow.render('↑', True, self.font_color)
         text_bet_down = self.font_arrow.render('↓', True, self.font_color)
+        text_players_up = self.font_arrow.render('↑', True, self.font_color)
+        text_players_down = self.font_arrow.render('↓', True, self.font_color)
         if self.players == 1:
             text_players = self.font.render('1 Player', True, self.font_color)
         else:
             text_players = self.font.render(str(self.players) + ' Players', True, self.font_color)
-
+        window.blit(text_players_up, center_text(text_players_up, self.button_players_up))
+        window.blit(text_players_down, center_text(text_players_down, self.button_players_down))
 
         if self.num_decs == 1:
             text_deck = self.font.render('1 Deck', True, self.font_color)
@@ -142,11 +148,13 @@ class Menu(object):
             interface_GUI = Interface_GUI(list[5], list[6], window, self.time, list[7])
             interface_GUI.game = list[0]
             interface_GUI.time_left = list[4]
+            interface_GUI.current_player = list[8]
             return("load", interface_GUI, list, list_all)
 
         if self.click(self.button_start, pos[0], pos[1]):
             classes.NUM_PLAYERS = self.players
             classes.NUM_DECKS = self.num_decs
+            classes.DEFAULT_BET = [self.bet]
             interface_GUI = Interface_GUI(self.num_decs, self.hotseat, window, self.time, self.bet)
             #game.start_game()
             print("start game")
@@ -160,6 +168,7 @@ class Menu(object):
             if self.bet > 10:
                 self.bet -= 20
             print("bet:", self.bet)
+
             return ("", 1)
         if self.click(self.button_deck_up, pos[0], pos[1]):
             if self.num_decs < 8:
@@ -188,9 +197,21 @@ class Menu(object):
             if self.time > 1:
                 self.time -= 1
             return ("", 1)
+        if self.click(self.button_players_up, pos[0], pos[1]):
+            if self.players < 4:
+                self.players += 1
+            return ("", 1)
+        if self.click(self.button_players_down, pos[0], pos[1]):
+            if self.players > 1:
+                self.players -= 1
+            return ("", 1)
         if self.click(self.button_stats, pos[0], pos[1]):
             print("go to stats(w przygotowaniu)")
-            return ("", 1)
+            if os.path.isfile('./stats'):
+                stats = Stats(pickle.load(open("stats", "rb")), window)
+            else:
+                stats = Stats([[0,0,0]], window)
+            return ("stats", stats)
         if self.paused and self.click(self.button_resume, pos[0], pos[1]):
             game.resume()
             print("resuming")
