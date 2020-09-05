@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 
 
-from resources import DEFAULT_DECK_NA, DEFAULT_BET, DEFAULT_CARDS, DEFAULT_SCORE, DEFAULT_BUDGET, \
-    DEFAULT_DECK_LEN, BET_MIN, NA_DECK_LEN, DEFAULT_FLAGS, NUM_DECKS, NUM_PLAYERS
+from resources import DEFAULT_BET, DEFAULT_CARDS, DEFAULT_SCORE, DEFAULT_BUDGET, \
+    BET_MIN, DEFAULT_FLAGS, NUM_DECKS, NUM_PLAYERS, DEFAULT_DECK, DEFAULT_TESTS
 from random import shuffle, choice
 from typing import NewType
-from typing import List, Tuple, Dict
+from typing import List, Tuple
 from copy import deepcopy, copy
 import time
 import colours as col
@@ -42,7 +42,7 @@ def create_player_names(lindexes):
 
 
 def create_deck():
-    deck = NUM_DECKS * DEFAULT_DECK_NA
+    deck = NUM_DECKS * DEFAULT_DECK
     shuffle(deck)
     return deck
 
@@ -112,10 +112,10 @@ class Game:
 
     def begin_first_turn(self) -> None:         # Ta funckja powinna konczyć się wyborem ruchu dla każdej ręki każdego gracza
         clear()
-        self.draw_hand(self.dealer.hand.cards)
+        self.draw_hand(self.dealer.hand)
         for player in self.pllst:
             for hand in player.hands_nt:
-                self.draw_hand(hand.cards)
+                self.draw_hand(hand)
             player.calculate_scores()
             self.show_dealers_card()
             player.choice(self.dealer, self.draw)  # Ta funkcje pobiera jaki ruch ma byc wykonany
@@ -144,7 +144,10 @@ class Game:
         return bool(run)
 
     def final_turn(self) -> None:
-        print("All players either lost or chose to stand!")
+        print("All players either lost or chose to stand! - Final turn begins")
+        for player in self.pllst:
+            for hand in player.hands_stand:
+                hand.choose_best_ace_value()
         self.dealer.draw_until_17_or_higher(self.draw)
         self.determine_round_outcome()
         self.CENR()
@@ -180,17 +183,20 @@ class Game:
             outcome += f'{index + 1}. {name1} finished the game with {wynik}$\n'
         print(outcome)
 
-    def draw(self, cards):
+    def draw(self, hand):
         card = self.deck.pop(0)
+        if card[0] == "Ace":
+            if hasattr(hand, "aces"):
+                hand.aces.append(card)
         if type(card) == str:
             self.cut_reached = True
-            cards.append(self.deck.pop(0))
+            self.draw(hand)
         else:
-            cards.append(card)
+            hand.cards.append(card)
 
-    def draw_hand(self, cards):
-        self.draw(cards)
-        self.draw(cards)
+    def draw_hand(self, hand):
+        self.draw(hand)
+        self.draw(hand)
 
     def show_dealers_card(self):
         print(f"Dealer's card : {self.dealer.hand.cards[0]}") if self.run_next_turn() else print(
@@ -297,6 +303,7 @@ class Hand(HandDealer):
         self.flags = flags if flags is not None else deepcopy(DEFAULT_FLAGS[0])
         self.bet = bet if bet is not None else deepcopy(DEFAULT_BET[0])
         self.index = index
+        self.aces = []
 
     def __str__(self):
         report = f"Hand.__str__() called for id : {id(self)}\n"
@@ -306,6 +313,26 @@ class Hand(HandDealer):
         report += f"Score : {self.score}\n"
         report += f"Index : {self.index}"
         return report
+
+    def change_and_replace(self, best_value, score):
+        self.score = score
+        self.aces[:best_value] = [("Ace", 1, colour) for _, _, colour in self.aces[:best_value]]
+        self.aces[best_value:] = [("Ace", 11, colour) for _, _, colour in self.aces[best_value:]]
+        self.cards = [card if card[0] != "Ace" else self.aces.pop() for card in self.cards]
+        print(f"Hand {self.index}: Best ace values has been chosen.")
+        print(f"{self.score} : {self.cards}")
+
+    def choose_best_ace_value(self):
+        if self.aces:
+            for it in range(len(self.aces) + 1):
+                score = self.score
+                ones = len(self.aces) - it
+                score += ones + it * 11
+                if score > 21:
+                    self.change_and_replace(ones + 1, score-10)
+                    break
+                if it == len(self.aces):
+                    self.change_and_replace(ones, score)
 
     def __eq__(self, other):
         if type(other) == tuple:
@@ -345,12 +372,12 @@ class Hand(HandDealer):
 
 
 class Player:
-
     def __init__(self, lcards, lflags, lbets, lscores, lindexes, name3, budget):
         self.hands_nt = [Hand(deepcopy(cards), deepcopy(flags), copy(bet), copy(score), copy(index)) for cards, flags, bet, score, index in
                          zip(lcards, lflags, lbets, lscores, lindexes)] if \
             (lcards, lflags, lbets, lscores) != (None, None, None, None, None) else [Hand()]
         self.name = name3
+        self.aces = []
         self.budget = budget
         self.hands_stand = []
         self.hands_busted = []
@@ -367,7 +394,7 @@ class Player:
         return report
 
     def hit(self, hand, draw):
-        draw(hand.cards)
+        draw(hand)
         hand.flags["hit"] = True
 
     def stand(self, hand):
@@ -377,7 +404,7 @@ class Player:
     def DD(self, hand, draw):
         if self.can_afford_new_bet(hand):
             self.budget -= hand.bet
-            draw(hand.cards)
+            draw(hand)
             self.calculate_scores()
             hand.bet *= 2
             hand.flags["DD"] = True
@@ -397,12 +424,13 @@ class Player:
 
     def insure(self, hand):
         if self.can_afford_insurance(hand):
+            self.budget -= hand.bet * 0.5
             hand.flags["insurance"] = True
         else:
             print(f"Gracza {self.name} nie stac na isurance")
 
     def can_afford_insurance(self, hand):
-        return hand.bet * 0.5 >= self.budget
+        return hand.bet * 0.5 <= self.budget
 
     def can_afford_new_bet(self, hand):
         return hand.bet <= self.budget
@@ -454,14 +482,14 @@ class Player:
                     print("Invalid input please try again.")
 
     def choice_processing_functions(self):
-            self.check_for_split()
-            self.calculate_scores()
-            self.check_for_bust()
-            self.lists_override()
+        self.check_for_split()
+        self.calculate_scores()
+        self.check_for_bust()
+        self.lists_override()
 
     def check_for_bust(self):
         for hand in self.hands_nt:
-            if hand.score > 21:
+            if hand.score - len(hand.aces) > 21:
                 self.hands_busted.append(hand)
 
     def check_for_split(self):
@@ -516,21 +544,21 @@ class Dealer:
         aces = []
         nscore = 0
         for card in self.hand.cards:
-            if card[1] != 0:
+            if card[0] != "Ace":
                 nscore += card[1]
             else:
-                index = self.hand.cards.index(card)
-                aces.append((index, card))
+                aces.append(card)
         self.hand.score = nscore
-        for index, card in aces:
-            _, point, colour = card
+        naces = []
+        for ace in aces:
+            _, point, colour = ace
             if self.hand.score <= 10:
                 point = 11
             else:
                 point = 1
-            new_card = ("Ace", point, colour)
+            naces.append(("Ace", point, colour))
             self.hand.score += point
-            self.hand.cards.insert(index, new_card)
+        self.hand.cards = [card if card[0] != "Ace" else naces.pop() for card in self.hand.cards]
 
     def draw_until_17_or_higher(self, draw):
         self.calculate_score()
@@ -538,9 +566,9 @@ class Dealer:
         message += " < 17" if self.hand.score < 17 else ""
         print(message)
         while self.hand.score < 17:
-            draw(self.hand.cards)
-            self.calculate_score()
+            draw(self.hand)
             print(f"Dealer draws {self.hand.cards[-1]}")
+            self.calculate_score()
             time.sleep(2)
         else:
             print(f"Dealer's final cards and score : {self.hand.cards} : {self.hand.score}")
