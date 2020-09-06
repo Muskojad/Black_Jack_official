@@ -10,7 +10,9 @@ width_w = 1000
 height_w = 700
 
 green = (36, 143, 46)
-blue = (0,191,255)
+blue_1 = (51, 204, 255)
+blue_2 = (0, 153, 204)
+blue_3 = (0, 96, 128)
 beige = (245,245,220)
 
 
@@ -26,6 +28,7 @@ def main():
     in_menu = True
     in_game = False
     in_menu_kon = False
+    in_stats = False
     it = 0
     time_game = 0
     load_list = []
@@ -36,6 +39,7 @@ def main():
     while game_work:
         time += clock.tick(30)
         time2 += time
+
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT or event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
@@ -56,14 +60,18 @@ def main():
                         it = game[2][1]
                         load_list = game[3]
                         game[1].load_it = len(game[3])
-
+                        #game[1].current_player = game[3][-1]
+                        #popraw
+                    if game[0] == "stats":
+                        in_menu = False
+                        in_stats = True
                 elif in_game:
                     interface = game[1].check_all_buttons(event.pos, window)
                     #print(load_list[0][0].talia_gracza, "       ", len(load_list))
                     if interface[0] == "end_busted":
                         #in_game = False
                         in_menu_kon = False
-                        it += 1
+                        #it += 1
                         time_game = 0
                     if interface[0] == "end":
                         #game[1].update_cards(window, True)
@@ -74,41 +82,80 @@ def main():
                     if interface == "undo":
                         game[1].game = copy.deepcopy(load_list[-2][0])
                         game[1].time_left = load_list[-2][4]
-                        #print(load_list[-2][8])
+                        #print(str(load_list[-2][8]) + " load list player")
+                        print(game[1].load_it)
                         game[1].current_player = load_list[-2][8]
                         game[1].load_it -= 1
-
+                        game[1].game.pllst[game[1].current_player].choice_processing_functions()
                         it = load_list[-2][1]
                         load_list.pop()
                     if interface == "hit":
                         it += 1
                     if interface != "nothing_clicked" and interface != "undo":
-                        print("append")
-                        load_list.append(
-                            [copy.deepcopy(game[1].game), it, in_menu, in_game, game[1].time_left, menu.num_decs, menu.hotseat,
-                             menu.bet, game[1].current_player])
-                        player = game[1].current_player
-                        player += 1
-                        game[1].update_cards(window, it)
-                        pygame.display.flip()
-                        pygame.time.wait(1000)
-                        if player >= classes.NUM_PLAYERS:
-                            player = 0
-                        game[1].current_player = player
-                        game[1].load_it += 1
-                        if game[1].game.run_round_loop():
-                            game[1].game.next_round()
 
-                        else:
-                            print("sdasd")
-                            game[1].game.final_round()
+                        player = game[1].current_player
+                        print("player " + str(player))
+                        game[1].game.pllst[player].choice_processing_functions()
+                        player += 1
+
+                        if not game[1].game.run_next_turn():
+                            game[1].game.final_turn()
+                            lista_kon =[]
+                            for player in game[1].game.pllst:
+                                lista_kon.append(200 - player.budget[0])###popraw
+                            menu_kon = Menu_kon(lista_kon, window)
+                            in_game = False
+                            in_menu_kon = False
+                            count = 0
+                            for a in game[1].game.pllst[game[1].current_player].hands_nt:
+                                for b in a.cards:
+                                    count += 1
+                            for a in game[1].game.pllst[game[1].current_player].hands_stand:
+                                for b in a.cards:
+                                    count += 1
+                            for a in game[1].game.pllst[game[1].current_player].hands_busted:
+                                for b in a.cards:
+                                    count += 1
+                            it = count
+                            print("koniec!!!!!!!!!!")
+                            break
+                            #return 0
+                        while player >= classes.NUM_PLAYERS or len(game[1].game.pllst[player].hands_nt) == 0: ###################
+                            player += 1
+                            if player >= classes.NUM_PLAYERS:
+                                player = 0
+
+                        pygame.display.flip()
+                        if not in_game or game[1].current_player == 0:
+                            window.fill(green)
+                        elif game[1].current_player == 1:
+                            window.fill(blue_1)
+                        elif game[1].current_player == 2:
+                            window.fill(blue_2)
+                        elif game[1].current_player == 3:
+                            window.fill(blue_3)
+                        game[1].draw(window)
+                        game[1].update_cards(window, it)
+
+                        pygame.display.flip()
+
+                        load_list.append(
+                            [copy.deepcopy(game[1].game), it, in_menu, in_game, game[1].time_left, menu.num_decs,
+                             menu.hotseat,
+                             menu.bet, player])
+
+                        pygame.time.wait(1500)
+                        game[1].current_player = player
+
+                        game[1].load_it += 1
+
 
 
 
 
 
                 elif in_menu_kon:
-                    kon = interface[1].check_all_buttons(event.pos, window)
+                    kon = menu_kon.check_all_buttons(event.pos, window)
                     if kon == "restart":
                         in_menu = True
                         in_menu_kon = False
@@ -117,10 +164,22 @@ def main():
                         time_game = 0
                         frap = True
                         #print("GH")
+
+                elif in_stats:
+                    go_back = game[1].check_all_buttons(event.pos, window)
+                    if go_back:
+                        in_menu = True
+                        in_stats = False
+                        del game
+
         if not in_game or game[1].current_player == 0:
             window.fill(green)
         elif game[1].current_player == 1:
-            window.fill(blue)
+            window.fill(blue_1)
+        elif game[1].current_player == 2:
+            window.fill(blue_2)
+        elif game[1].current_player == 3:
+            window.fill(blue_3)
         if in_menu:
             menu.draw(window)
             # print("s")
@@ -129,7 +188,11 @@ def main():
             game[1].time_left -= time/1000
 
             game[1].draw(window)
-            length = len(game[1].game.player_list[0].cards) + len(game[1].game.dealer.cards)# + len(game[1].cards.talia_split)
+            if game[1].game.pllst[0].hands_nt:
+                lennn = len(game[1].game.pllst[0].hands_nt[0].cards)
+            else:
+                lennn = 2
+            length = lennn + len(game[1].game.dealer.hand.cards)# + len(game[1].cards.talia_split)
             if time_game > 1000 and it < length:
                 it +=1
                 time_game = 0
@@ -143,69 +206,47 @@ def main():
             pygame.display.flip()
             time_game += time
             if game[1].time_left <= 0 and game[1].hotseat:
+                print("koniec czasu")
+                #return 0
                 in_game = False
-                in_menu_kon = False
+                in_menu_kon = True
+                menu_kon = Menu_kon([-game[1].game.pllst[0].budget[0]], window)##########################################
                 #krupier = game[1].cards.krupier()   ###################
                 #interface = ("end", Menu_kon(krupier[0], krupier[1], window))#####################
                 time_game = 0
                 #it += 1
         # pygame.display.flip()
-        elif not in_game and not in_menu_kon:
-            length = len(game[1].game.player_list[0].cards) + len(game[1].game.dealer.cards) #+ len(game[1].cards.talia_split)
-            if time_game > 2000 and it <= length:
+        elif not in_game and not in_menu_kon and not in_stats:
+
+            count_2 = count + len(game[1].game.dealer.hand.cards)
+            #print(count)
+            print(it)
+            print(count_2)
+            #length = len(game[1].game.pllst[game[1].current_player].hands_nt[0].cards) + len(game[1].game.dealer.hand.cards) + len(game[1].game.pllst[game[1].current_player].hands_nt[0].cards)
+            if time_game > 2000 and it <= count_2:#length:
                 it += 1
                 time_game = 0
             time_game += time
-            #game[1].cards.odslon = True
-            #print(game[1].cards.odslon, "sssssssssssssss")
+
             game[1].update_cards(window, it)
-            #pygame.time.wait(100)
+
             pygame.display.flip()
-            #pygame.time.wait(5000)
-            if it == length + 1:
+
+            if it == count_2 + 1:
                 in_menu_kon = True
+                print("xd")
+                print(it)
+
         elif in_menu_kon:
-            #interface[1].draw(window)
-            print("koniec")
+            #print("koniec")
+            menu_kon.draw(window)
+
+        elif in_stats:
+            game[1].draw(window)
 
         time = 0.0
-        # interface.update()
-        # print("g")
-        # print(interface.get_feedback())
 
 
-talia = (
-("as", 0, "Kier"), ("jedynka", 1, "Kier"), ("dwojka", 2, "Kier"), ("trojka", 3, "Kier"), ("czworka", 4, "Kier"),
-("piatka", 5, "Kier"))  # ,
-# (szostka,6, Kier), (dziewiatka,9, Kier), (dziesiatka,10, Kier), (jopek,10, Kier), (dama,10, Kier),
-# (krol,10, Kier), (as,0, Pik), (jedynka,1, Pik), (dwojka,2, Pik), (trojka,3, Pik), (czworka,4, Pik),
-# (piatka,5, Pik), (szostka,6, Pik), (dziewiatka,9, Pik), (dziesiatka,10, Pik), (jopek,10, Pik), (dama,10, Pik),
-# (krol,10, Pik), (as,0, Trefl), (jedynka,1, Trefl), (dwojka,2, Trefl), (trojka,3, Trefl), (czworka,4, Trefl),
-# (piatka,5, Trefl), (szostka,6, Trefl), (dziewiatka,9, Trefl), (dziesiatka,10, Trefl), (jopek,10, Trefl),
-# (dama,10, Trefl), (krol,10, Trefl), (as,0, Karo), (jedynka,1, Karo), (dwojka,2, Karo), (trojka,3, Karo),
-# (czworka,4, Karo), (piatka,5, Karo), (szostka,6, Karo), (dziewiatka,9, Karo), (dziesiatka,10, Karo),
-# (jopek,10, Karo), (dama,10, Karo), (krol,10, Karo))
 
-
-talia_gracza = [
-    (11, "As", "Pik"),
-    (3, "3", "Kier"),
-    (5, "5", "Karo"),
-    (7, "7", "Pik"),
-    (9, "9", "Trefl"),
-    (10, "Dama", "Pik"),
-    (11, "As", "Pik"),
-    (10, "Król", "Karo")
-]
-
-talia_gracza_po_spilt = [
-    # (1,"As","Pik"),
-    # (3,"3","Kier")
-]
-
-talia_krupiera = [
-    (11, "As", "Pik"),
-    (105, "5", "Trefl"),
-]
 if __name__ == "__main__":
     main()

@@ -5,15 +5,6 @@
 #   W TYM PLIKU TESTUJE KOD
 #
 
-import pygame
-import pickle
-#from logic import Cards
-from menu_kon import Menu_kon
-from classes import Game
-import resources as rsrc
-#from classes import can_insure
-
-#from classes import Deck
 width_w = 1000
 height_w = 700
 
@@ -310,5 +301,3 @@ class Interface_GUI():
         if y_0 == len(self.game.dealer.hand.cards):
             self.can_click = True
             #print(y)
-
-
