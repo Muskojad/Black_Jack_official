@@ -3,7 +3,7 @@
 
 
 from resources import DEFAULT_BET, DEFAULT_CARDS, DEFAULT_SCORE, DEFAULT_BUDGET, \
-    BET_MIN, DEFAULT_FLAGS, NUM_DECKS, NUM_PLAYERS, DEFAULT_DECK, DEFAULT_TESTS
+    BET_MIN, DEFAULT_FLAGS, NUM_DECKS, NUM_PLAYERS, DEFAULT_DECK
 from random import shuffle, choice
 from typing import NewType
 from typing import List, Tuple
@@ -31,6 +31,12 @@ def clear():
     # for mac and linux(here, os.name is 'posix')
     else:
         _ = system('clear')
+
+
+def restart():
+    import sys
+    import os
+    os.execv(sys.executable, ['python'] + sys.argv)
 
 
 def create_lindexes():
@@ -118,16 +124,12 @@ class Game:
                 self.draw_hand(hand)
             player.calculate_scores()
             self.show_dealers_card()
-            player.choice(self.dealer, self.draw)
-            input("Press 'enter' to select next player.")
 
     def next_turn(self) -> None:
         clear()
         for player in self.pllst:
             if player.hands_nt:
                 self.show_dealers_card()
-                player.choice(self.dealer, self.draw)
-                input("Press 'enter' to select next player.")
 
     def run_next_turn(self) -> bool:
         run = 0
@@ -140,10 +142,10 @@ class Game:
         for player in self.pllst:
             for hand in player.hands_stand:
                 hand.choose_best_ace_value()
+                hand.check_for_blackjack()
         self.dealer.draw_until_17_or_higher(self.draw)
         self.determine_round_outcome()
         self.CENR()
-        input("Press 'enter' to continue...")
 
     def first_round(self) -> None:
         self.subtract_bets_from_budgets()
@@ -151,7 +153,6 @@ class Game:
 
     def next_round(self) -> None:
         if self.cut_reached:
-            print("Cut has been reached - deck is being shuffled")
             self.deck = create_deck()
             self.insert_cut()
         for player in self.pllst:
@@ -204,17 +205,30 @@ class Game:
         if d_score > 21:
             print("Dealer busted! All those who didn't bust win!")
             for player in self.pllst:
+                def difference(dealer_score, hand_score):
+                    return abs(dealer_score - 21) - abs(hand_score - 21)
+
+                hands_blckjck = [hand for hand in player.hands_stand if hand.flags["blackJack"] and difference(d_score, hand.score) != 0]
+                hands_win = [hand for hand in player.hands_stand if difference(d_score, hand.score) > 0 and not hand.flags["blackJack"]]
                 print(col.red(f"{player.name}") + " :")
+                for hand in hands_blckjck:
+                    pot = hand.win()
+                    player.budget += pot
+                    outcome = col.magenta(f"    hand {hand.index}") + f" : {hand.score}" + col.green(" > ") + f"{d_score} - "
+                    outcome += col.cyan(f"Black Jack! pot {pot}$ = {hand.bet}$ * 2,5")
+                    print(outcome)
+
+                for hand in hands_win:
+                    pot = hand.win()
+                    player.budget += pot
+                    outcome = col.magenta(f"    hand {hand.index}") + f" : {hand.score}" + col.green(" > ") + f"{d_score} - "
+                    outcome += col.green(f'wins {pot}$')
+                    print(outcome)
+
                 for hand in player.hands_busted:
                     outcome = col.magenta(f"    hand {hand.index}") + f" : {hand.score}" + col.red(" >> ") + "21 - "
                     outcome += col.red("busted")
                     print(outcome)
-
-                for hand in player.hands_stand:
-                    pot = hand.win()
-                    player.budget += pot
-                    print(col.magenta(f"    Hand {hand.index}") + f" : {hand.score}" + col.green(" << ") + f"{d_score}"
-                          + col.green(f" - won {pot}$\n"))
                 print(f"    Current budget : {player.budget}$\n")
         else:
             for player in self.pllst:
@@ -223,8 +237,8 @@ class Game:
                 def difference(dealer_score, hand_score):
                     return abs(dealer_score - 21) - abs(hand_score - 21)
 
-                hands_blckjck = [hand for hand in player.hands_stand if hand.flags["blackJack"] and not difference(d_score, hand.score)]
-                hands_win = [hand for hand in player.hands_stand if difference(d_score, hand.score) > 0]
+                hands_blckjck = [hand for hand in player.hands_stand if hand.flags["blackJack"] and difference(d_score, hand.score) != 0]
+                hands_win = [hand for hand in player.hands_stand if difference(d_score, hand.score) > 0 and not hand.flags["blackJack"]]
                 hands_draw = [hand for hand in player.hands_stand if not difference(d_score, hand.score)]
                 hands_loss = [hand for hand in player.hands_stand if difference(d_score, hand.score) < 0]
                 hands_busted = [hand for hand in player.hands_busted]
@@ -279,6 +293,7 @@ class Game:
         for player in self.pllst:
             for hand in player.hands_nt:
                 player.budget -= hand.bet
+        print("Bets has been subtracted form budgets.")
 
 
 class HandDealer:
@@ -310,31 +325,10 @@ class Hand(HandDealer):
         report += f"Index : {self.index}"
         return report
 
-    def change_and_replace(self, best_value, score):
-        self.score = score
-        self.aces[:best_value] = [("Ace", 1, colour) for _, _, colour in self.aces[:best_value]]
-        self.aces[best_value:] = [("Ace", 11, colour) for _, _, colour in self.aces[best_value:]]
-        self.cards = [card if card[0] != "Ace" else self.aces.pop() for card in self.cards]
-        print(f"Hand {self.index}: Best ace values has been chosen.")
-        print(f"{self.score} : {self.cards}")
-
-    def choose_best_ace_value(self):
-        if self.aces:
-            for it in range(len(self.aces) + 1):
-                score = self.score
-                ones = len(self.aces) - it
-                score += ones + it * 11
-                if score > 21:
-                    self.change_and_replace(ones + 1, score-10)
-                    break
-                if it == len(self.aces):
-                    self.change_and_replace(ones, score)
-
     def __eq__(self, other):
         if type(other) == tuple:
             return False
-        return self.cards == other.cards and self.flags == other.flags and \
-               self.bet == other.bet and self.score == other.score
+        return id(self) == id(other)
 
     def can_hit(self):
         return not self.flags["DD"]
@@ -366,6 +360,30 @@ class Hand(HandDealer):
     def draw(self):
         return self.bet
 
+    def check_for_blackjack(self):
+        if len(self.cards) == 2 and self.score == 21:
+            self.flags["blackJack"] = True
+
+    def change_and_replace(self, best_value, score):
+        self.score = score
+        self.aces[:best_value] = [("Ace", 1, colour) for _, _, colour in self.aces[:best_value]]
+        self.aces[best_value:] = [("Ace", 11, colour) for _, _, colour in self.aces[best_value:]]
+        self.cards = [card if card[0] != "Ace" else self.aces.pop() for card in self.cards]
+        print(f"Hand {self.index}: Best ace values has been chosen.")
+        print(f"{self.score} : {self.cards}")
+
+    def choose_best_ace_value(self):
+        if self.aces:
+            for it in range(len(self.aces) + 1):
+                score = self.score
+                ones = len(self.aces) - it
+                score += ones + it * 11
+                if score > 21:
+                    self.change_and_replace(ones + 1, score-10)
+                    break
+                if it == len(self.aces):
+                    self.change_and_replace(ones, score)
+
 
 class Player:
     def __init__(self, lcards, lflags, lbets, lscores, lindexes, name3, budget):
@@ -383,7 +401,7 @@ class Player:
         report += "\u001b[31m"
         report += f"Name : {self.name}\n"
         report += "\u001b[37m"
-        report += f"Budget : {self.budget}\n"
+        report += f"Budget : {self.budget}$\n"
         report += f"{self.name}.hands_nt : {self.hands_nt}\n"
         report += f"{self.name}.hands_stand : {self.hands_stand}\n"
         report += f"{self.name}.hands_busted : {self.hands_busted}\n"
@@ -407,23 +425,31 @@ class Player:
             if hand.score <= 21:
                 self.hands_stand.append(hand)
         else:
-            print(f"Gracza {self.name} nie stac na Double Down")
+            print(f"{self.name} : Hand {hand.index} cannot afford to Double Down.")
 
     def split(self, hand):
-        index = self.hands_nt.index(hand)
-        hand.flags["split"] = True
-        self.hands_nt = [elem for elem in self.hands_nt if elem != hand]
-        self.budget -= hand.bet
-        hand1, hand2 = Hand(deepcopy([hand.cards[0]]), deepcopy(hand.flags), copy(hand.bet)),\
-                       Hand(deepcopy([hand.cards[1]]), deepcopy(hand.flags), copy(hand.bet))
-        self.hands_nt.insert(index, (hand1, hand2))
+        if self.can_afford_new_bet(hand):
+            index = self.hands_nt.index(hand)
+            hand.flags["split"] = True
+            self.hands_nt = [elem for elem in self.hands_nt if elem != hand]
+            self.budget -= hand.bet
+            hand1, hand2 = Hand(deepcopy([hand.cards[0]]), deepcopy(hand.flags), copy(hand.bet)),\
+                           Hand(deepcopy([hand.cards[1]]), deepcopy(hand.flags), copy(hand.bet))
+            hand1.index = hand.index
+            for h in (hand1, hand2):
+                for card in h.cards:
+                    if card[0] == "Ace":
+                        h.aces.append(card)
+            self.hands_nt.insert(index, (hand1, hand2))
+        else:
+            print(f"{self.name} : Hand {hand.index} cannot afford to split.")
 
     def insure(self, hand):
         if self.can_afford_insurance(hand):
             self.budget -= hand.bet * 0.5
             hand.flags["insurance"] = True
         else:
-            print(f"Gracza {self.name} nie stac na isurance")
+            print(f"{self.name} : Hand {hand.index} cannot afford an insurance.")
 
     def can_afford_insurance(self, hand):
         return hand.bet * 0.5 <= self.budget
@@ -433,51 +459,6 @@ class Player:
 
     def can_afford_new_round(self):
         return self.budget >= BET_MIN
-
-    def choice(self, dealer, draw):
-        for hand in self.hands_nt:
-            run = True
-            print(col.red(f"{self.name}") + " : ")
-            print(f"    budget : {self.budget}")
-            mess = col.magenta(f"    hand {hand.index} ") + f":\n       score : {hand.score}"
-            mess += f"{len(self.aces)}x Ace" if self.aces else ""
-            print(mess)
-            print(f"       bet : {hand.bet}")
-            print(f"       cards : {hand.cards}")
-            while run:
-                choice = input()
-                if choice == "hit":
-                    if hand.can_hit():
-                        self.hit(hand, draw)
-                        run = False
-                    else:
-                        print(f"This hand can't hit.")
-                elif choice == "stand":
-                    if hand.can_stand():
-                        self.stand(hand)
-                        run = False
-                    else:
-                        print(f"This hand can't stand.")
-                elif choice == "split":
-                    if hand.can_split():
-                        self.split(hand)
-                        run = False
-                    else:
-                        print(f"This hand can't split.")
-                elif choice == "double down":
-                    if hand.can_DD():
-                        self.DD(hand, draw)
-                        run = False
-                    else:
-                        print(f"This hand can't DD.")
-                elif choice == "insurance" or choice == "insure":
-                    if hand.can_insure(dealer):
-                        self.insure(hand)
-                        run = False
-                    else:
-                        print(f"This hand can't use insurance.")
-                else:
-                    print("Invalid input please try again.")
 
     def choice_processing_functions(self):
         self.check_for_split()
@@ -492,18 +473,16 @@ class Player:
 
     def check_for_split(self):
         nowa_lista = []
-        index = 1
+        i = 1
         for elem in self.hands_nt:
             if type(elem) == tuple:
-                elem[0].index = index
-                index += 1
-                elem[1].index = index
+                elem[1].index = len(self.hands_nt + self.hands_busted + self.hands_stand) + i
+                i += 1
                 nowa_lista.append(elem[0])
                 nowa_lista.append(elem[1])
             else:
                 nowa_lista.append(elem)
-            index += 1
-        nowa_lista.sort(key=lambda a: a.index)
+        nowa_lista.sort(key=lambda elem: elem.index)
         self.hands_nt = nowa_lista
 
     def lists_override(self):
@@ -570,9 +549,3 @@ class Dealer:
             time.sleep(2)
         else:
             print(f"Dealer's final cards and score : {self.hand.cards} : {self.hand.score}")
-
-
-def main():
-    game_loop()
-
-main()
