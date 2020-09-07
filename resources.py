@@ -19,10 +19,9 @@ DEFAULT_DECK_NA = [('3', 3, 'Heart'), ('3', 3, 'Heart'), ('7', 7, 'Spade'),  ('A
                    ]
 
 
-DEFAULT_TESTS = [('Ace', 0, 'Diamond'), ('Ace', 0, 'Diamond'), ('Ace', 0, 'Diamond'), ('Ace', 0, 'Diamond'),
-                 ('Ace', 0, 'Diamond'), ('Ace', 0, 'Diamond'), ('Ace', 0, 'Diamond'), ('Ace', 0, 'Diamond'),
-                 ('Ace', 0, 'Diamond'), ('Ace', 0, 'Diamond'), ('Ace', 0, 'Diamond'), ('Ace', 0, 'Diamond'),
-                 ('Ace', 0, 'Diamond'), ('Ace', 0, 'Diamond'), ('Ace', 0, 'Diamond'), ('Ace', 0, 'Diamond')]
+DEFAULT_TESTS = [('Ace', 0, 'Spade'),('Ace', 0, 'Spade'),('Ace', 0, 'Spade'),('Ace', 0, 'Spade'),
+                 ('Ace', 0, 'Spade'),('Ace', 0, 'Spade'),('Ace', 0, 'Spade'),('Ace', 0, 'Spade'),
+                 ('Ace', 0, 'Spade'),('Ace', 0, 'Spade'),('Ace', 0, 'Spade'),('Ace', 0, 'Spade')]
 
 
 DEFAULT_DECK = [('Ace', 0, 'Diamond'), ('2', 2, 'Diamond'), ('3', 3, 'Diamond'), ('4', 4, 'Diamond'),
@@ -52,12 +51,10 @@ DEFAULT_FLAGS = [{
 }]
 
 DEFAULT_BET = [10]
+NUM_PLAYERS = 2  # musi być mniejszy niż 8 bo tak
+NUM_DECKS = 3
 DEFAULT_SCORE = [0]
 DEFAULT_CARDS = [[]]
 DEFAULT_BUDGET = 200
-
-NUM_PLAYERS = 2  # musi być mniejszy niż 8 bo tak
-NUM_DECKS = 3
-
 BET_MIN = 5
 

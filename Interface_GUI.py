@@ -114,12 +114,12 @@ class Interface_GUI():
         text_split = self.font.render("Split", True, self.font_color)
         text_insure = self.font.render("Insure", True, self.font_color)
         text_bet = self.font.render(str(self.bet) + "$", True, self.font_color)
-        text_player = self.font.render("Player " + str(self.current_player+1), True, self.font_color)
+        text_player = self.font.render(self.game.pllst[self.current_player].name, True, self.font_color)
 
         if self.time_left <= 0:
             text_time = self.font.render("0 s left", True, self.font_color)
         else:
-            text_time = self.font.render(str("% .2f" %(self.time_left)) + "s left" , True, self.font_color)
+            text_time = self.font.render(f"{self.time_left:.2f} s left", True, self.font_color)
 
         if self.hotseat:
             pygame.draw.rect(window, self.time_col, self.button_time)

@@ -62,9 +62,9 @@ class Menu_kon():
         i = 1
         for player in self.money:
             if player > 0:
-                text = self.font_arrow.render("Player "+str(i)+" won " + str(player) + "$", True, self.font_color)
+                text = self.font_arrow.render("Player "+str(i)+" won " + str(abs(player)) + "$", True, self.font_color)
             elif player < 0:
-                text = self.font_arrow.render("Player " + str(i) + " lost " + str(player) + "$", True, self.font_color)
+                text = self.font_arrow.render("Player " + str(i) + " lost " + str(abs(player)) + "$", True, self.font_color)
             else:
                 text = self.font_arrow.render("Player " + str(i) + "tied", True, self.font_color)
             height = self.textbox[3] / self.num_players

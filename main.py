@@ -13,7 +13,7 @@ green = (36, 143, 46)
 blue_1 = (51, 204, 255)
 blue_2 = (0, 153, 204)
 blue_3 = (0, 96, 128)
-beige = (245,245,220)
+beige = (245, 245, 220)
 
 
 def main():
@@ -102,7 +102,7 @@ def main():
                             game[1].game.final_turn()
                             lista_kon =[]
                             for player in game[1].game.pllst:
-                                lista_kon.append(200 - player.budget[0])###popraw
+                                lista_kon.append(player.budget - 200)
                             menu_kon = Menu_kon(lista_kon, window)
                             in_game = False
                             in_menu_kon = False
@@ -185,7 +185,8 @@ def main():
             # print("s")
             pygame.display.flip()
         elif in_game:
-            game[1].time_left -= time/1000
+            if it > 3:
+                game[1].time_left -= time/1000
 
             game[1].draw(window)
             if game[1].game.pllst[0].hands_nt:

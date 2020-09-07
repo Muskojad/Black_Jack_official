@@ -199,7 +199,7 @@ class Menu(object):
                 self.time -= 1
             return ("", 1)
         if self.click(self.button_players_up, pos[0], pos[1]):
-            if self.players < 4:
+            if self.players < 4 and not self.hotseat:
                 self.players += 1
             return ("", 1)
         if self.click(self.button_players_down, pos[0], pos[1]):
